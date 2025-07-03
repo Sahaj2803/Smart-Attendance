@@ -13,7 +13,7 @@ app.use("/api/attendance", require("./routes/attendance"));
 
 // MongoDB Connect
 mongoose
-  .connect("mongodb://localhost:27017/attendance", {
+  .connect("mongodb+srv://sahaj2803:Sahaj%402803@attendance.5j9ey1h.mongodb.net/?retryWrites=true&w=majority&appName=Attendance", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
