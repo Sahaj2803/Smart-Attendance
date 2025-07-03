@@ -1,14 +1,14 @@
 import axios from "axios";
 
-// 🔧 Axios instance with baseURL
+// 🔧 Axios instance with Render backend baseURL from .env
 const API = axios.create({
-  baseURL: "http://localhost:5000/api", // Adjust if using different port
+  baseURL: `${process.env.REACT_APP_API_BASE}/api`, // ✅ comes from .env file
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// 🔐 Attach token to every request
+// 🔐 Automatically attach token (if available)
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -17,14 +17,14 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// ⚠️ Optional: Handle global auth errors
+// ⚠️ Global error handling for 401/403
 API.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 || err.response?.status === 403) {
       console.warn("Unauthorized. Logging out...");
       localStorage.clear();
-      window.location.href = "/login"; // Redirect to login if token expired/invalid
+      window.location.href = "/login";
     }
     return Promise.reject(err);
   }
