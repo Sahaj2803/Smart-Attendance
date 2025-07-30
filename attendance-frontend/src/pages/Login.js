@@ -8,7 +8,7 @@ export default function Login() {
   const [role, setRole] = useState("student");
   const navigate = useNavigate();
 
-  // Use role state directly for avatar
+  
   const avatarSrc =
     role === "faculty"
       ? "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
