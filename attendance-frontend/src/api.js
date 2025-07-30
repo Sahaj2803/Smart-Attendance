@@ -1,14 +1,14 @@
 import axios from "axios";
 
-// 🔧 Axios instance with Render backend baseURL from .env
+//  Axios instance with Render backend baseURL from .env
 const API = axios.create({
-  baseURL: `${process.env.REACT_APP_API_BASE}/api`, // ✅ comes from .env file
+  baseURL: `${process.env.REACT_APP_API_BASE}/api`, 
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// 🔐 Automatically attach token (if available)
+//  Automatically attach token (if available)
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -17,7 +17,6 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// ⚠️ Global error handling for 401/403
 API.interceptors.response.use(
   (res) => res,
   (err) => {
