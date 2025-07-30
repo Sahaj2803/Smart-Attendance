@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
-import AttendanceChart from "../components/AttendanceChart"; // <-- Add this import
+import AttendanceChart from "../components/AttendanceChart"; 
 
 const COLORS = ["#00C49F", "#FF8042"];
 
