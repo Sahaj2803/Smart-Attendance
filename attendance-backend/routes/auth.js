@@ -5,10 +5,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { protect } = require("../middleware/authMiddleware");
 
-// ❌ Removed duplicate import
-// const { loginUser } = require("../controllers/authController");
 
-// ✅ Login route - written directly here
 router.post("/login", async (req, res) => {
   const { email, password, role } = req.body;
 
@@ -58,7 +55,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ✅ Faculty login route
+//  Faculty login route
 router.post("/faculty-login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -80,7 +77,7 @@ router.post("/faculty-login", async (req, res) => {
   }
 });
 
-// ✅ Student login route
+//  Student login route
 router.post("/student-login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -102,7 +99,7 @@ router.post("/student-login", async (req, res) => {
   }
 });
 
-// ✅ Only faculty can access student list
+//  Only faculty can access student list
 router.get("/students", protect, async (req, res) => {
   if (req.user.role !== "faculty") {
     return res.status(403).json({ error: "Only faculty can access this route" });
