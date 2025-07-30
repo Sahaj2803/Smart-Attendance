@@ -1,4 +1,3 @@
-// attendance-backend/controllers/attendanceController.js
 const Attendance = require("../models/Attendance");
 const User = require("../models/User");
 
@@ -9,7 +8,7 @@ const markAttendance = async (req, res) => {
   try {
     const newRecord = new Attendance({
       student: studentId,
-      markedBy: req.user.id, // 🔄 use markedBy (not faculty)
+      markedBy: req.user.id,
       status,
       date: new Date(),
     });
@@ -22,21 +21,19 @@ const markAttendance = async (req, res) => {
   }
 };
 
-// ✅ Student views their own attendance
 const getStudentAttendance = async (req, res) => {
   try {
     const records = await Attendance.find({ student: req.user.id })
       .populate("markedBy", "name email")
       .sort({ date: -1 });
 
-    res.json(records); // ✅ plain array
+    res.json(records); 
   } catch (err) {
     console.error("❌ Get Student Attendance Error:", err.message);
     res.status(500).json({ error: "Failed to fetch attendance" });
   }
 };
 
-// ✅ Common report view for student/faculty
 const getAttendanceReport = async (req, res) => {
   try {
     const { id, role } = req.user;
@@ -51,7 +48,7 @@ const getAttendanceReport = async (req, res) => {
       .populate("markedBy", "name email")
       .sort({ date: -1 });
 
-    res.json(records); // ✅ return plain array
+    res.json(records);
   } catch (err) {
     console.error("❌ Report Fetch Error:", err.message);
     res.status(500).json({ error: "Failed to fetch report" });
