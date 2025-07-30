@@ -4,7 +4,6 @@ const cors = require("cors");
 const app = express();
 require("dotenv").config();
 
-// ✅ Fix CORS for Vercel frontend
 app.use(cors({
   origin: ["https://smart-attendance-git-main-sahaj2803s-projects.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE"],
