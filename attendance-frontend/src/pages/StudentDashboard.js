@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import AttendanceChart from "../components/AttendanceChart";
-import DarkModeToggle from "../components/DarkModeToggle"; // <-- import toggle switch
+import DarkModeToggle from "../components/DarkModeToggle"; // Toggle switch
 
 const COLORS = ["#00C49F", "#FF8042"];
 
@@ -53,15 +53,17 @@ export default function StudentDashboard() {
     <div
       className={
         darkMode
-          ? "bg-gray-900 text-white min-h-screen p-6"
-          : "bg-gradient-to-b from-blue-900 to-blue-700 text-white min-h-screen p-6"
+          ? "bg-gray-900 text-white min-h-screen p-4 sm:p-6"
+          : "bg-gradient-to-b from-blue-900 to-blue-700 text-white min-h-screen p-4 sm:p-6"
       }
     >
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">📊 Your Attendance Chart</h2>
+      {/* ✅ Mobile-friendly top section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold">
+          📊 Your Attendance Chart
+        </h2>
 
-        <div className="flex items-center space-x-4">
-          {/* Toggle switch yahan use ho raha hai */}
+        <div className="flex flex-wrap items-center gap-3">
           <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
 
           <button
@@ -80,10 +82,13 @@ export default function StudentDashboard() {
         </div>
       </div>
 
+      {/* 📊 Attendance chart */}
       {loading ? (
         <p className="text-center text-lg">Loading attendance...</p>
       ) : attendance.length === 0 ? (
-        <p className="text-center text-yellow-200">No attendance data found.</p>
+        <p className="text-center text-yellow-200">
+          No attendance data found.
+        </p>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -109,10 +114,10 @@ export default function StudentDashboard() {
         </ResponsiveContainer>
       )}
 
+      {/* 📈 Attendance trend chart */}
       <div className="mt-8">
         <AttendanceChart attendanceData={attendance} />
       </div>
     </div>
   );
 }
-
