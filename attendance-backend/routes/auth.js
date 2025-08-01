@@ -5,20 +5,24 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { protect } = require("../middleware/authMiddleware");
 
-//  Middleware to allow only faculty
+//  Middleware: Faculty check 
 const verifyFaculty = (req, res, next) => {
-  protect(req, res, () => {
-    if (req.user.role !== "faculty") {
-      return res.status(403).json({ error: "Only faculty allowed" });
-    }
-    next();
-  });
+  if (req.user.role !== "faculty") {
+    return res.status(403).json({ error: "Only faculty allowed" });
+  }
+  next();
 };
 
-//  Delete Student Controller
+//  DELETE student controller
 const deleteStudent = async (req, res) => {
   try {
     const { id } = req.params;
+    const student = await User.findById(id);
+
+    if (!student || student.role !== "student") {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
     await User.findByIdAndDelete(id);
     res.status(200).json({ message: "Student deleted successfully" });
   } catch (err) {
@@ -27,6 +31,32 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+//  POST: Register
+router.post("/register", async (req, res) => {
+  const { name, email, password, role } = req.body;
+
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ error: "All fields required" });
+  }
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ name, email, password: hashedPassword, role });
+    await newUser.save();
+
+    res.status(201).json({ message: "User registered successfully" });
+  } catch (err) {
+    console.error("Register error:", err.message);
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+//  POST: Login (general)
 router.post("/login", async (req, res) => {
   const { email, password, role } = req.body;
 
@@ -52,33 +82,10 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/register", async (req, res) => {
-  const { name, email, password, role } = req.body;
-
-  if (!name || !email || !password || !role) {
-    return res.status(400).json({ error: "All fields required" });
-  }
-
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedPassword, role });
-    await newUser.save();
-
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    console.error("Register error:", err.message);
-    res.status(500).json({ error: "Registration failed" });
-  }
-});
-
-// Faculty login route
+//  POST: Faculty Login
 router.post("/faculty-login", async (req, res) => {
   const { email, password } = req.body;
+
   try {
     const user = await User.findOne({ email, role: "faculty" });
     if (!user) return res.status(404).json({ error: "Faculty not found" });
@@ -98,9 +105,10 @@ router.post("/faculty-login", async (req, res) => {
   }
 });
 
-// Student login route
+//  POST: Student Login
 router.post("/student-login", async (req, res) => {
   const { email, password } = req.body;
+
   try {
     const user = await User.findOne({ email, role: "student" });
     if (!user) return res.status(404).json({ error: "Student not found" });
@@ -120,12 +128,8 @@ router.post("/student-login", async (req, res) => {
   }
 });
 
-// Only faculty can access student list
-router.get("/students", protect, async (req, res) => {
-  if (req.user.role !== "faculty") {
-    return res.status(403).json({ error: "Only faculty can access this route" });
-  }
-
+//  GET: List all students (faculty only)
+router.get("/students", protect, verifyFaculty, async (req, res) => {
   try {
     const students = await User.find({ role: "student" }).select("-password");
     res.json(students);
@@ -135,7 +139,7 @@ router.get("/students", protect, async (req, res) => {
   }
 });
 
-//  DELETE student (faculty only)
-router.delete("/student/:id", verifyFaculty, deleteStudent);
+//  DELETE: Delete student (faculty only)
+router.delete("/student/:id", protect, verifyFaculty, deleteStudent);
 
 module.exports = router;
