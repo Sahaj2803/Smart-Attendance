@@ -5,6 +5,27 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { protect } = require("../middleware/authMiddleware");
 
+//  Middleware to allow only faculty
+const verifyFaculty = (req, res, next) => {
+  protect(req, res, () => {
+    if (req.user.role !== "faculty") {
+      return res.status(403).json({ error: "Only faculty allowed" });
+    }
+    next();
+  });
+};
+
+//  Delete Student Controller
+const deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await User.findByIdAndDelete(id);
+    res.status(200).json({ message: "Student deleted successfully" });
+  } catch (err) {
+    console.error("Delete error:", err.message);
+    res.status(500).json({ error: "Failed to delete student" });
+  }
+};
 
 router.post("/login", async (req, res) => {
   const { email, password, role } = req.body;
@@ -55,7 +76,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-//  Faculty login route
+// Faculty login route
 router.post("/faculty-login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -77,7 +98,7 @@ router.post("/faculty-login", async (req, res) => {
   }
 });
 
-//  Student login route
+// Student login route
 router.post("/student-login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -99,7 +120,7 @@ router.post("/student-login", async (req, res) => {
   }
 });
 
-//  Only faculty can access student list
+// Only faculty can access student list
 router.get("/students", protect, async (req, res) => {
   if (req.user.role !== "faculty") {
     return res.status(403).json({ error: "Only faculty can access this route" });
@@ -113,5 +134,8 @@ router.get("/students", protect, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch students" });
   }
 });
+
+//  DELETE student (faculty only)
+router.delete("/student/:id", verifyFaculty, deleteStudent);
 
 module.exports = router;
