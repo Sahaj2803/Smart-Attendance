@@ -2,6 +2,7 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
+// Login Controller
 const loginUser = async (req, res) => {
   const { email, password, role } = req.body;
 
@@ -13,7 +14,9 @@ const loginUser = async (req, res) => {
     }
 
     if (user.role !== role) {
-      return res.status(403).json({ error: `You are not authorized to login as ${role}` });
+      return res
+        .status(403)
+        .json({ error: `You are not authorized to login as ${role}` });
     }
 
     const token = jwt.sign(
@@ -37,4 +40,26 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { loginUser };
+// Faculty Controller: Delete student
+const deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const student = await User.findOne({ _id: id, role: "student" });
+    if (!student) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    await User.findByIdAndDelete(id);
+    res.status(200).json({ message: "Student deleted successfully" });
+  } catch (err) {
+    console.error("Delete student error:", err.message);
+    res.status(500).json({ error: "Failed to delete student" });
+  }
+};
+
+module.exports = {
+  loginUser,
+  deleteStudent,
+};
+
