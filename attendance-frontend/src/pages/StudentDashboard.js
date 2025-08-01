@@ -9,7 +9,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
-import AttendanceChart from "../components/AttendanceChart"; 
+import AttendanceChart from "../components/AttendanceChart";
+import DarkModeToggle from "../components/DarkModeToggle"; // <-- import toggle switch
 
 const COLORS = ["#00C49F", "#FF8042"];
 
@@ -58,19 +59,18 @@ export default function StudentDashboard() {
     >
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">📊 Your Attendance Chart</h2>
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="px-3 py-1 bg-yellow-400 rounded text-black"
-          >
-            {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
-          </button>
+
+        <div className="flex items-center space-x-4">
+          {/* Toggle switch yahan use ho raha hai */}
+          <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
+
           <button
             onClick={() => navigate("/profile")}
             className="bg-indigo-500 hover:bg-indigo-700 text-white px-3 py-1 rounded"
           >
             View Profile
           </button>
+
           <button
             onClick={handleLogout}
             className="bg-red-500 text-white px-3 py-1 rounded"
@@ -109,12 +109,10 @@ export default function StudentDashboard() {
         </ResponsiveContainer>
       )}
 
-      {/* AttendanceChart component yahan add karein */}
-      
-    <div className="mt-8">
-      <AttendanceChart attendanceData={attendance} />
-    </div>
-
+      <div className="mt-8">
+        <AttendanceChart attendanceData={attendance} />
+      </div>
     </div>
   );
 }
+
