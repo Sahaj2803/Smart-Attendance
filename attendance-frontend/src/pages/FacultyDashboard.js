@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
-import DarkModeToggle from "../components/DarkModeToggle";
+import DarkModeToggle from "../components/DarkModeToggle"; // optional toggle switch
 
 export default function FacultyDashboard() {
   const [students, setStudents] = useState([]);
@@ -26,7 +26,7 @@ export default function FacultyDashboard() {
 
   const deleteStudent = (id) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
-      API.delete(`/auth/student/${id}`) 
+      API.delete(`/student/${id}`)
         .then(() => {
           alert("Student deleted");
           fetchStudents(); // refresh list
@@ -41,7 +41,14 @@ export default function FacultyDashboard() {
   };
 
   return (
-    <div className={`p-6 min-h-screen ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100"}`}>
+    <div
+      className={`p-6 min-h-screen transition duration-300 ${
+        darkMode
+          ? "bg-gray-900 text-white"
+          : "bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 text-black"
+      }`}
+    >
+      {/* Top bar */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Mark Attendance</h2>
         <div className="space-x-4 flex items-center">
@@ -61,6 +68,7 @@ export default function FacultyDashboard() {
         </div>
       </div>
 
+      {/* Student list */}
       <ul className="space-y-3">
         {students.map((s) => (
           <li
