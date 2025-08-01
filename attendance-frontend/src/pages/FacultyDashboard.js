@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
-import DarkModeToggle from "../components/DarkModeToggle"; // optional toggle switch
+import DarkModeToggle from "../components/DarkModeToggle"; 
 
 export default function FacultyDashboard() {
   const [students, setStudents] = useState([]);
@@ -26,7 +26,7 @@ export default function FacultyDashboard() {
 
   const deleteStudent = (id) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
-      API.delete(`/student/${id}`)
+      API.delete(`/auth/student/${id}`)
         .then(() => {
           alert("Student deleted");
           fetchStudents(); // refresh list
