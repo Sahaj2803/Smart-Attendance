@@ -40,12 +40,12 @@ const loginUser = async (req, res) => {
   }
 };
 
-// Faculty Controller: Delete student
+//  Delete student
 const deleteStudent = async (req, res) => {
   try {
     const { id } = req.params;
-
     const student = await User.findOne({ _id: id, role: "student" });
+
     if (!student) {
       return res.status(404).json({ error: "Student not found" });
     }
@@ -62,4 +62,3 @@ module.exports = {
   loginUser,
   deleteStudent,
 };
-
