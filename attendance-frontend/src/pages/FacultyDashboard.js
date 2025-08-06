@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
-import DarkModeToggle from "../components/DarkModeToggle"; 
+import DarkModeToggle from "../components/DarkModeToggle";
 
 export default function FacultyDashboard() {
   const [students, setStudents] = useState([]);
@@ -29,7 +29,7 @@ export default function FacultyDashboard() {
       API.delete(`/auth/student/${id}`)
         .then(() => {
           alert("Student deleted");
-          fetchStudents(); // refresh list
+          fetchStudents();
         })
         .catch(() => alert("Failed to delete student"));
     }
@@ -42,26 +42,26 @@ export default function FacultyDashboard() {
 
   return (
     <div
-      className={`p-6 min-h-screen transition duration-300 ${
+      className={`p-4 sm:p-6 min-h-screen transition duration-300 ${
         darkMode
           ? "bg-gray-900 text-white"
           : "bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 text-black"
       }`}
     >
       {/* Top bar */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
         <h2 className="text-xl font-bold">Mark Attendance</h2>
-        <div className="space-x-4 flex items-center">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
           <button
             onClick={() => navigate("/profile")}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1 rounded"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1 rounded w-full sm:w-auto"
           >
             View Profile
           </button>
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-1 rounded"
+            className="bg-red-500 text-white px-4 py-1 rounded w-full sm:w-auto"
           >
             Logout
           </button>
@@ -73,14 +73,15 @@ export default function FacultyDashboard() {
         {students.map((s) => (
           <li
             key={s._id}
-            className={`flex flex-col sm:flex-row justify-between items-start sm:items-center border p-4 rounded-lg shadow-md ${
+            className={`flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center border p-4 rounded-lg shadow-md ${
               darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
             }`}
           >
-            <span>
-              <strong>{s.name}</strong> ({s.email})
-            </span>
-            <div className="mt-2 sm:mt-0 space-x-2">
+            <div>
+              <p className="font-semibold capitalize">{s.name}</p>
+              <p className="text-sm text-gray-400">{s.email}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => mark(s._id, "present")}
                 className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
@@ -106,3 +107,4 @@ export default function FacultyDashboard() {
     </div>
   );
 }
+
