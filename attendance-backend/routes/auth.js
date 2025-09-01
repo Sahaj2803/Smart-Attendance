@@ -1,4 +1,3 @@
-// attendance-backend/routes/auth.js
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
@@ -6,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { protect } = require("../middleware/authMiddleware");
 
-// Middleware: Faculty check
+//  Middleware: Faculty check 
 const verifyFaculty = (req, res, next) => {
   if (req.user.role !== "faculty") {
     return res.status(403).json({ error: "Only faculty allowed" });
@@ -14,7 +13,7 @@ const verifyFaculty = (req, res, next) => {
   next();
 };
 
-// DELETE student controller
+//  DELETE student controller
 const deleteStudent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -32,9 +31,7 @@ const deleteStudent = async (req, res) => {
   }
 };
 
-// ================= AUTH ROUTES ================= //
-
-// POST: Register (faculty or student)
+//  POST: Register
 router.post("/register", async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -59,7 +56,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// POST: General login (role check included)
+//  POST: Login (general)
 router.post("/login", async (req, res) => {
   const { email, password, role } = req.body;
 
@@ -85,7 +82,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// POST: Faculty Login (only faculty)
+//  POST: Faculty Login
 router.post("/faculty-login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -108,7 +105,7 @@ router.post("/faculty-login", async (req, res) => {
   }
 });
 
-// POST: Student Login (only student)
+//  POST: Student Login
 router.post("/student-login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -131,9 +128,7 @@ router.post("/student-login", async (req, res) => {
   }
 });
 
-// ================= FACULTY PROTECTED ROUTES ================= //
-
-// GET: List all students
+//  GET: List all students (faculty only)
 router.get("/students", protect, verifyFaculty, async (req, res) => {
   try {
     const students = await User.find({ role: "student" }).select("-password");
@@ -144,8 +139,9 @@ router.get("/students", protect, verifyFaculty, async (req, res) => {
   }
 });
 
-// DELETE: Delete student
+//  DELETE: Delete student (faculty only)
 router.delete("/student/:id", protect, verifyFaculty, deleteStudent);
 
 module.exports = router;
+
 
