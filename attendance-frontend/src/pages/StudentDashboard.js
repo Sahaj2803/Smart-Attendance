@@ -8,7 +8,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useNavigate, Routes, Route } from "react-router-dom";
 import AttendanceChart from "../components/AttendanceChart";
 import DarkModeToggle from "../components/DarkModeToggle";
 
@@ -18,7 +17,7 @@ export default function StudentDashboard() {
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const navigate = useNavigate();
+  const [showProfile, setShowProfile] = useState(false); // ✅ Profile toggle
 
   useEffect(() => {
     API.get("/attendance/my")
@@ -49,126 +48,105 @@ export default function StudentDashboard() {
     window.location.href = "/login";
   };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
-
   return (
-    <Routes>
-      {/* ✅ Dashboard Page */}
-      <Route
-        path="/"
-        element={
-          <div
-            className={`min-h-screen p-6 transition-colors duration-500 ${
-              darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
-            }`}
-          >
-            {/* Header */}
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b pb-4">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-wide">
-                📊 Attendance Dashboard
-              </h2>
+    <div
+      className={`min-h-screen p-6 transition-colors duration-500 ${
+        darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
+      }`}
+    >
+      {/* Header */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b pb-4">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-wide">
+          {showProfile ? "👤 Student Profile" : "📊 Attendance Dashboard"}
+        </h2>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
+        <div className="flex flex-wrap items-center gap-3">
+          <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
 
-                <button
-                  onClick={() => navigate("/studentDashboard/profile")}
-                  className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-md transition"
-                >
-                  View Profile
-                </button>
-
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl shadow-md transition"
-                >
-                  Logout
-                </button>
-              </div>
-            </header>
-
-            {/* Attendance Summary Chart */}
-            <div className="bg-white/80 dark:bg-gray-800/70 backdrop-blur-md shadow-lg p-6 rounded-2xl">
-              {loading ? (
-                <p className="text-center text-lg animate-pulse">
-                  Loading attendance...
-                </p>
-              ) : attendance.length === 0 ? (
-                <p className="text-center text-yellow-600 font-medium">
-                  ⚠ No attendance records found.
-                </p>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={summary}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={110}
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {summary.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value, name) => [value, name]} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-
-            {/* Attendance Trend */}
-            <div className="mt-10 bg-white/80 dark:bg-gray-800/70 backdrop-blur-md shadow-lg p-6 rounded-2xl">
-              <h3 className="text-xl font-semibold mb-4">
-                📈 Attendance Trend
-              </h3>
-              <AttendanceChart attendanceData={attendance} />
-            </div>
-          </div>
-        }
-      />
-
-      {/* ✅ Profile Page */}
-      <Route
-        path="/studentDashboard/profile"
-        element={
-          <div
-            className={`min-h-screen p-6 transition-colors duration-500 ${
-              darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
-            }`}
-          >
-            <h2 className="text-3xl font-bold mb-6">👤 Student Profile</h2>
-
+          {showProfile ? (
             <button
-              onClick={handleBack}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-md transition mb-6"
+              onClick={() => setShowProfile(false)}
+              className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-md transition"
             >
               ⬅ Back
             </button>
+          ) : (
+            <button
+              onClick={() => setShowProfile(true)}
+              className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-md transition"
+            >
+              View Profile
+            </button>
+          )}
 
-            <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-md shadow-lg p-6 rounded-2xl max-w-lg">
-              <p className="mb-2">
-                <strong>Name:</strong> John Doe
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl shadow-md transition"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
+
+      {/* ✅ Page Content */}
+      {showProfile ? (
+        // Profile Page
+        <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-md shadow-lg p-6 rounded-2xl max-w-lg">
+          <p className="mb-2">
+            <strong>Name:</strong> John Doe
+          </p>
+          <p className="mb-2">
+            <strong>Email:</strong> john@example.com
+          </p>
+          <p className="mb-2">
+            <strong>Roll No:</strong> 123456
+          </p>
+        </div>
+      ) : (
+        // Dashboard Page
+        <>
+          {/* Attendance Summary Chart */}
+          <div className="bg-white/80 dark:bg-gray-800/70 backdrop-blur-md shadow-lg p-6 rounded-2xl">
+            {loading ? (
+              <p className="text-center text-lg animate-pulse">
+                Loading attendance...
               </p>
-              <p className="mb-2">
-                <strong>Email:</strong> john@example.com
+            ) : attendance.length === 0 ? (
+              <p className="text-center text-yellow-600 font-medium">
+                ⚠ No attendance records found.
               </p>
-              <p className="mb-2">
-                <strong>Roll No:</strong> 123456
-              </p>
-            </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={summary}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={110}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {summary.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value, name) => [value, name]} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
-        }
-      />
-    </Routes>
+
+          {/* Attendance Trend */}
+          <div className="mt-10 bg-white/80 dark:bg-gray-800/70 backdrop-blur-md shadow-lg p-6 rounded-2xl">
+            <h3 className="text-xl font-semibold mb-4">📈 Attendance Trend</h3>
+            <AttendanceChart attendanceData={attendance} />
+          </div>
+        </>
+      )}
+    </div>
   );
 }
-
-
