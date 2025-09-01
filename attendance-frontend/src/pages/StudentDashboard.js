@@ -12,12 +12,12 @@ import { useNavigate, Routes, Route } from "react-router-dom";
 import AttendanceChart from "../components/AttendanceChart";
 import DarkModeToggle from "../components/DarkModeToggle";
 
-const COLORS = ["#00C49F", "#FF8042"];
+const COLORS = ["#22c55e", "#ef4444"]; // green + red
 
 export default function StudentDashboard() {
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(false); // ✅ Default light mode
+  const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,11 +50,7 @@ export default function StudentDashboard() {
   };
 
   const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate("/student-dashboard", { replace: true });
-    }
+    navigate(-1);
   };
 
   return (
@@ -65,22 +61,20 @@ export default function StudentDashboard() {
         element={
           <div
             className={`min-h-screen p-6 transition-colors duration-500 ${
-              darkMode
-                ? "bg-gray-900 text-white"
-                : "bg-gray-50 text-gray-900"
+              darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
             }`}
           >
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b pb-4">
               <h2 className="text-2xl sm:text-3xl font-bold tracking-wide">
-                📊 Your Attendance Dashboard
+                📊 Attendance Dashboard
               </h2>
 
               <div className="flex flex-wrap items-center gap-3">
                 <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
 
                 <button
-                  onClick={() => navigate("profile")}
+                  onClick={() => navigate("/studentDashboard/profile")}
                   className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-md transition"
                 >
                   View Profile
@@ -93,15 +87,17 @@ export default function StudentDashboard() {
                   Logout
                 </button>
               </div>
-            </div>
+            </header>
 
-            {/* Attendance Chart */}
-            <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-lg shadow-xl p-6 rounded-2xl">
+            {/* Attendance Summary Chart */}
+            <div className="bg-white/80 dark:bg-gray-800/70 backdrop-blur-md shadow-lg p-6 rounded-2xl">
               {loading ? (
-                <p className="text-center text-lg">Loading attendance...</p>
+                <p className="text-center text-lg animate-pulse">
+                  Loading attendance...
+                </p>
               ) : attendance.length === 0 ? (
-                <p className="text-center text-yellow-600">
-                  No attendance data found.
+                <p className="text-center text-yellow-600 font-medium">
+                  ⚠ No attendance records found.
                 </p>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
@@ -111,7 +107,6 @@ export default function StudentDashboard() {
                       cx="50%"
                       cy="50%"
                       outerRadius={110}
-                      fill="#8884d8"
                       dataKey="value"
                       label={({ name, value }) => `${name}: ${value}`}
                     >
@@ -130,7 +125,7 @@ export default function StudentDashboard() {
             </div>
 
             {/* Attendance Trend */}
-            <div className="mt-10 bg-white/70 dark:bg-gray-800/60 backdrop-blur-lg shadow-xl p-6 rounded-2xl">
+            <div className="mt-10 bg-white/80 dark:bg-gray-800/70 backdrop-blur-md shadow-lg p-6 rounded-2xl">
               <h3 className="text-xl font-semibold mb-4">
                 📈 Attendance Trend
               </h3>
@@ -146,9 +141,7 @@ export default function StudentDashboard() {
         element={
           <div
             className={`min-h-screen p-6 transition-colors duration-500 ${
-              darkMode
-                ? "bg-gray-900 text-white"
-                : "bg-gray-50 text-gray-900"
+              darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
             }`}
           >
             <h2 className="text-3xl font-bold mb-6">👤 Student Profile</h2>
@@ -160,7 +153,7 @@ export default function StudentDashboard() {
               ⬅ Back
             </button>
 
-            <div className="bg-white/80 dark:bg-gray-800/70 backdrop-blur-lg shadow-xl p-6 rounded-2xl">
+            <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-md shadow-lg p-6 rounded-2xl max-w-lg">
               <p className="mb-2">
                 <strong>Name:</strong> John Doe
               </p>
@@ -177,4 +170,5 @@ export default function StudentDashboard() {
     </Routes>
   );
 }
+
 
