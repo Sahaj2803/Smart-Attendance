@@ -17,8 +17,12 @@ export default function StudentDashboard() {
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [showProfile, setShowProfile] = useState(false); // ✅ Profile toggle
+  const [showProfile, setShowProfile] = useState(false);
 
+  // ✅ Profile data state
+  const [profile, setProfile] = useState(null);
+
+  // Fetch attendance
   useEffect(() => {
     API.get("/attendance/my")
       .then((res) => {
@@ -29,6 +33,15 @@ export default function StudentDashboard() {
         console.error("Attendance fetch error:", err);
         alert("Unauthorized or failed to fetch attendance");
         setLoading(false);
+      });
+  }, []);
+
+  // ✅ Fetch profile details
+  useEffect(() => {
+    API.get("/auth/me")
+      .then((res) => setProfile(res.data))
+      .catch((err) => {
+        console.error("Profile fetch error:", err);
       });
   }, []);
 
@@ -92,15 +105,21 @@ export default function StudentDashboard() {
       {showProfile ? (
         // Profile Page
         <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-md shadow-lg p-6 rounded-2xl max-w-lg">
-          <p className="mb-2">
-            <strong>Name:</strong> John Doe
-          </p>
-          <p className="mb-2">
-            <strong>Email:</strong> john@example.com
-          </p>
-          <p className="mb-2">
-            <strong>Roll No:</strong> 123456
-          </p>
+          {profile ? (
+            <>
+              <p className="mb-2">
+                <strong>Name:</strong> {profile.name}
+              </p>
+              <p className="mb-2">
+                <strong>Email:</strong> {profile.email}
+              </p>
+              <p className="mb-2">
+                <strong>Roll No:</strong> {profile.rollNo}
+              </p>
+            </>
+          ) : (
+            <p className="text-center text-gray-500">Loading profile...</p>
+          )}
         </div>
       ) : (
         // Dashboard Page
