@@ -1,5 +1,4 @@
 // ✅ 1. App.js
-import SpeedInsights from '@vercel/speed-insights';
 import React, { useState } from "react";
 import {
   BrowserRouter as Router,
@@ -22,9 +21,7 @@ export default function App() {
     <div className={dark ? "dark" : ""}>
       <Router>
         <div className="min-h-screen transition-all bg-gray-100 dark:bg-gradient-to-br dark:from-[#1a1a2e] dark:via-[#16213e] dark:to-[#0f3460] text-gray-900 dark:text-white">
-
-          {/* 👇 SpeedInsights component add kiya */}
-          <SpeedInsights />
+         
 
           <Routes>
             <Route path="/" element={<LandingPage />} />
