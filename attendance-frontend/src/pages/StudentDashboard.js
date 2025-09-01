@@ -142,7 +142,7 @@ export default function StudentDashboard() {
 
       {/* ✅ Profile Page */}
       <Route
-        path="profile"
+        path="/studentDashboard/profile"
         element={
           <div
             className={`min-h-screen p-6 transition-colors duration-500 ${
