@@ -67,7 +67,7 @@ export default function StudentDashboard() {
 
           {/* ✅ Profile Page Navigation */}
           <button
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate("/ProfilePage")}
             className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-md transition"
           >
             View Profile
