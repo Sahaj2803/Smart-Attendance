@@ -68,7 +68,7 @@ export default function FacultyDashboard() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
                 <button
-                  onClick={() => navigate("profile")}
+                  onClick={() => navigate("/ProfilePage")}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1 rounded w-full sm:w-auto"
                 >
                   View Profile
