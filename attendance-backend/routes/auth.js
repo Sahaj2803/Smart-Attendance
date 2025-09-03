@@ -143,6 +143,9 @@ router.get("/students", protect, verifyFaculty, async (req, res) => {
 //  DELETE: Delete student (faculty only)
 router.delete("/student/:id", protect, verifyFaculty, deleteStudent);
 
+//  GET: Get current user profile
+router.get("/me", protect, getCurrentUser);
+
 module.exports = router;
 
 
