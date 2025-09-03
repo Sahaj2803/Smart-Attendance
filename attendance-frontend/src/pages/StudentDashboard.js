@@ -111,7 +111,9 @@ export default function StudentDashboard() {
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-              <p className="text-lg font-medium text-slate-600 dark:text-slate-400">
+              <p className={`text-lg font-medium ${
+                darkMode ? "text-slate-400" : "text-slate-600"
+              }`}>
                 Loading your dashboard...
               </p>
             </div>
@@ -137,10 +139,14 @@ export default function StudentDashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+              <h3 className={`text-lg font-semibold mb-2 ${
+                darkMode ? "text-slate-100" : "text-slate-900"
+              }`}>
                 Error Loading Dashboard
               </h3>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">{error}</p>
+              <p className={`mb-6 ${
+                darkMode ? "text-slate-400" : "text-slate-600"
+              }`}>{error}</p>
               <button
                 onClick={() => window.location.reload()}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
@@ -164,10 +170,14 @@ export default function StudentDashboard() {
         {/* Professional Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
           <div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+            <h1 className={`text-3xl lg:text-4xl font-bold mb-2 ${
+              darkMode ? "text-slate-100" : "text-slate-900"
+            }`}>
               Student Dashboard
             </h1>
-            <p className="text-slate-600 dark:text-slate-400 text-lg">
+            <p className={`text-lg ${
+              darkMode ? "text-slate-400" : "text-slate-600"
+            }`}>
               Welcome back, {user?.name || "Student"}! Here's your attendance overview.
             </p>
           </div>
@@ -258,14 +268,20 @@ export default function StudentDashboard() {
           {/* Attendance Distribution Chart */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+              <h3 className={`text-xl font-semibold ${
+                darkMode ? "text-slate-100" : "text-slate-900"
+              }`}>
                 📊 Attendance Distribution
               </h3>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-slate-600 dark:text-slate-400">Present</span>
+                <span className={`text-sm ${
+                  darkMode ? "text-slate-400" : "text-slate-600"
+                }`}>Present</span>
                 <div className="w-3 h-3 bg-red-500 rounded-full ml-4"></div>
-                <span className="text-sm text-slate-600 dark:text-slate-400">Absent</span>
+                <span className={`text-sm ${
+                  darkMode ? "text-slate-400" : "text-slate-600"
+                }`}>Absent</span>
               </div>
             </div>
             
@@ -276,10 +292,14 @@ export default function StudentDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h4 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                <h4 className={`text-lg font-medium mb-2 ${
+                  darkMode ? "text-slate-100" : "text-slate-900"
+                }`}>
                   No Data Available
                 </h4>
-                <p className="text-slate-600 dark:text-slate-400">
+                <p className={`${
+                  darkMode ? "text-slate-400" : "text-slate-600"
+                }`}>
                   No attendance records found.
                 </p>
               </div>
@@ -307,7 +327,9 @@ export default function StudentDashboard() {
 
           {/* Attendance Trend Chart */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6">
+            <h3 className={`text-xl font-semibold mb-6 ${
+              darkMode ? "text-slate-100" : "text-slate-900"
+            }`}>
               📈 Attendance Trend
             </h3>
             {attendance.length === 0 ? (
@@ -317,10 +339,14 @@ export default function StudentDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
-                <h4 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                <h4 className={`text-lg font-medium mb-2 ${
+                  darkMode ? "text-slate-100" : "text-slate-900"
+                }`}>
                   No Trend Data
                 </h4>
-                <p className="text-slate-600 dark:text-slate-400">
+                <p className={`${
+                  darkMode ? "text-slate-400" : "text-slate-600"
+                }`}>
                   Attendance trend will appear here once you have records.
                 </p>
               </div>
@@ -334,10 +360,14 @@ export default function StudentDashboard() {
         {attendance.length > 0 && (
           <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+              <h3 className={`text-xl font-semibold ${
+                darkMode ? "text-slate-100" : "text-slate-900"
+              }`}>
                 📋 Recent Attendance Records
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className={`text-sm mt-1 ${
+                darkMode ? "text-slate-400" : "text-slate-600"
+              }`}>
                 Your latest attendance entries
               </p>
             </div>
@@ -346,13 +376,19 @@ export default function StudentDashboard() {
               <table className="w-full">
                 <thead className="bg-slate-50 dark:bg-slate-700">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                    <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                      darkMode ? "text-slate-300" : "text-slate-600"
+                    }`}>
                       Date
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                    <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                      darkMode ? "text-slate-300" : "text-slate-600"
+                    }`}>
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                    <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                      darkMode ? "text-slate-300" : "text-slate-600"
+                    }`}>
                       Marked By
                     </th>
                   </tr>
@@ -360,7 +396,9 @@ export default function StudentDashboard() {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                   {attendance.slice(0, 5).map((record) => (
                     <tr key={record._id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
+                        darkMode ? "text-slate-100" : "text-slate-900"
+                      }`}>
                         {new Date(record.date).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
@@ -379,7 +417,9 @@ export default function StudentDashboard() {
                           {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                        darkMode ? "text-slate-400" : "text-slate-600"
+                      }`}>
                         {record.markedBy?.name || "N/A"}
                       </td>
                     </tr>
