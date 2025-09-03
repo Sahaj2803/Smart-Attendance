@@ -4,27 +4,33 @@ const cors = require("cors");
 const app = express();
 require("dotenv").config();
 
-// ✅ CORS Configuration
+// ✅ Allowed Origins
 const allowedOrigins = [
   "https://smart-attendance-git-main-sahaj2803s-projects.vercel.app",
   "http://localhost:3000",
   "http://localhost:3001"
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"]
-}));
+// ✅ CORS Middleware
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS Not Allowed"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"]
+  })
+);
 
-// ✅ Express Body Parser
+// ✅ Handle Preflight Requests
+app.options("*", cors());
+
+// ✅ Body Parser
 app.use(express.json());
 
 // ✅ Routes
