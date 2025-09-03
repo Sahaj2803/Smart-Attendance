@@ -85,7 +85,11 @@ export default function StudentDashboard() {
   // Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      <div className={`min-h-screen transition-colors duration-500 ${
+        darkMode 
+          ? "bg-gradient-to-br from-slate-900 to-slate-800" 
+          : "bg-gradient-to-br from-slate-50 to-slate-100"
+      }`}>
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
@@ -103,7 +107,11 @@ export default function StudentDashboard() {
   // Error State
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      <div className={`min-h-screen transition-colors duration-500 ${
+        darkMode 
+          ? "bg-gradient-to-br from-slate-900 to-slate-800" 
+          : "bg-gradient-to-br from-slate-50 to-slate-100"
+      }`}>
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
@@ -130,7 +138,11 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className={`min-h-screen transition-colors duration-500 ${
+      darkMode 
+        ? "bg-gradient-to-br from-slate-900 to-slate-800" 
+        : "bg-gradient-to-br from-slate-50 to-slate-100"
+    }`}>
       <div className="container mx-auto px-4 py-8">
         {/* Professional Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
