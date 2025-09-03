@@ -5,12 +5,31 @@ const app = express();
 require("dotenv").config();
 
 app.use(cors({
-  origin: ["https://smart-attendance-git-main-sahaj2803s-projects.vercel.app"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+  origin: [
+    "https://smart-attendance-git-main-sahaj2803s-projects.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:3001"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"],
+  optionsSuccessStatus: 200
 }));
 
 app.use(express.json());
+
+// Additional CORS middleware for preflight requests
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));
