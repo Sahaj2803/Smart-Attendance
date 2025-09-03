@@ -1,15 +1,15 @@
 import axios from "axios";
 
-//  Axios instance with Render backend baseURL
+// ✅ Correct Render Backend URL
 const API = axios.create({
-  baseURL: "https://smart-attendance-api-j1bv.onrender.com/api", 
+  baseURL: "https://smart-attendance-api-jibv.onrender.com/api", 
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true
+  withCredentials: true,
 });
 
-//  Automatically attach token (if available)
+// ✅ Attach Token Automatically
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -18,11 +18,12 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+// ✅ Handle Unauthorized Responses
 API.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 || err.response?.status === 403) {
-      console.warn("Unauthorized. Logging out...");
+      console.warn("⚠ Unauthorized. Logging out...");
       localStorage.clear();
       window.location.href = "/login";
     }
@@ -31,3 +32,4 @@ API.interceptors.response.use(
 );
 
 export default API;
+
