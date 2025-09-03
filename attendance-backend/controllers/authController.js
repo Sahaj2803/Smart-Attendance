@@ -40,6 +40,20 @@ const loginUser = async (req, res) => {
   }
 };
 
+// Get current user profile
+const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error("Get current user error:", err.message);
+    res.status(500).json({ error: "Failed to get user profile" });
+  }
+};
+
 //  Delete student
 const deleteStudent = async (req, res) => {
   try {
@@ -60,5 +74,7 @@ const deleteStudent = async (req, res) => {
 
 module.exports = {
   loginUser,
+  getCurrentUser,
   deleteStudent,
 };
+
