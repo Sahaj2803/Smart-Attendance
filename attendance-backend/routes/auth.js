@@ -4,6 +4,7 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { protect } = require("../middleware/authMiddleware");
+const { getCurrentUser } = require("../controllers/authController");
 
 //  Middleware: Faculty check 
 const verifyFaculty = (req, res, next) => {
