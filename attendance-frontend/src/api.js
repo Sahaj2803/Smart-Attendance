@@ -5,7 +5,7 @@ const API = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,
+  withCredentials: false // ✅ Change to false for Vercel + Render
 });
 
 API.interceptors.request.use((config) => {
