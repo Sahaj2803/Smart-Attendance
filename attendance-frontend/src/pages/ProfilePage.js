@@ -49,6 +49,17 @@ export default function ProfilePage() {
     fetchData();
   }, []);
 
+  // Handle dark mode class on HTML element
+  useEffect(() => {
+    // Check if dark mode is enabled from localStorage or default to false
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    if (savedDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
   const handleBack = () => {
     const userRole = user?.role;
     if (userRole === "student") {
@@ -373,5 +384,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-
