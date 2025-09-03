@@ -1,11 +1,12 @@
 import axios from "axios";
 
-//  Axios instance with Render backend baseURL from .env
+//  Axios instance with Render backend baseURL
 const API = axios.create({
-  baseURL: `${process.env.REACT_APP_API_BASE}/api`, 
+  baseURL: "https://smart-attendance-api-j1bv.onrender.com/api", 
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true
 });
 
 //  Automatically attach token (if available)
