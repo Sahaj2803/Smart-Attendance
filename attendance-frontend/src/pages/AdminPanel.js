@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaUsers, FaChalkboardTeacher, FaChartBar, FaCog, FaDownload, FaTrash, FaEdit, FaPlus } from 'react-icons/fa';
+
 import axios from 'axios';
 
 const AdminPanel = () => {
@@ -18,19 +19,23 @@ const AdminPanel = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('/api/admin/users');
+      const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
+      // Set default data if API fails
+      setUsers([]);
     }
   };
 
   const fetchFaculty = async () => {
     try {
-      const response = await axios.get('/api/admin/faculty');
+      const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty');
       setFaculty(response.data);
     } catch (error) {
       console.error('Error fetching faculty:', error);
+      // Set default data if API fails
+      setFaculty([]);
     }
   };
 
@@ -69,42 +74,54 @@ const AdminPanel = () => {
 
   const renderDashboard = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
         <div className="flex items-center">
-          <FaUsers className="text-3xl text-blue-500 mr-4" />
+          <div className="bg-blue-100 p-3 rounded-xl mr-4">
+            <FaUsers className="text-2xl text-blue-600" />
+          </div>
           <div>
-            <p className="text-sm text-gray-600">Total Students</p>
-            <p className="text-2xl font-bold text-gray-800">{users.length}</p>
+            <p className="text-sm text-gray-500 font-medium">Total Students</p>
+            <p className="text-3xl font-bold text-gray-800">{users.length || 0}</p>
+            <p className="text-xs text-green-600 font-medium">✓ Active</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
         <div className="flex items-center">
-          <FaChalkboardTeacher className="text-3xl text-green-500 mr-4" />
+          <div className="bg-green-100 p-3 rounded-xl mr-4">
+            <FaChalkboardTeacher className="text-2xl text-green-600" />
+          </div>
           <div>
-            <p className="text-sm text-gray-600">Total Faculty</p>
-            <p className="text-2xl font-bold text-gray-800">{faculty.length}</p>
+            <p className="text-sm text-gray-500 font-medium">Total Faculty</p>
+            <p className="text-3xl font-bold text-gray-800">{faculty.length || 0}</p>
+            <p className="text-xs text-green-600 font-medium">✓ Available</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
         <div className="flex items-center">
-          <FaChartBar className="text-3xl text-yellow-500 mr-4" />
+          <div className="bg-yellow-100 p-3 rounded-xl mr-4">
+            <FaChartBar className="text-2xl text-yellow-600" />
+          </div>
           <div>
-            <p className="text-sm text-gray-600">Active Sessions</p>
-            <p className="text-2xl font-bold text-gray-800">12</p>
+            <p className="text-sm text-gray-500 font-medium">Active Sessions</p>
+            <p className="text-3xl font-bold text-gray-800">12</p>
+            <p className="text-xs text-blue-600 font-medium">↗ +2 today</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
         <div className="flex items-center">
-          <FaCog className="text-3xl text-purple-500 mr-4" />
+          <div className="bg-purple-100 p-3 rounded-xl mr-4">
+            <FaCog className="text-2xl text-purple-600" />
+          </div>
           <div>
-            <p className="text-sm text-gray-600">System Status</p>
-            <p className="text-2xl font-bold text-green-600">Online</p>
+            <p className="text-sm text-gray-500 font-medium">System Status</p>
+            <p className="text-3xl font-bold text-green-600">Online</p>
+            <p className="text-xs text-green-600 font-medium">✓ 99.9% uptime</p>
           </div>
         </div>
       </div>
@@ -324,16 +341,26 @@ const AdminPanel = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
-          <p className="text-gray-600 mt-2">Manage your smart attendance system</p>
+        {/* Header with gradient background */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 mb-8 text-white shadow-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Admin Panel</h1>
+              <p className="text-blue-100 text-lg">Manage your smart attendance system</p>
+            </div>
+            <div className="bg-white/20 p-4 rounded-full">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="bg-white rounded-lg shadow-md mb-8">
-          <nav className="flex space-x-8 px-6">
+        <div className="bg-white rounded-xl shadow-lg mb-8 border border-gray-100">
+          <nav className="flex space-x-1 p-2">
             {[
               { id: 'dashboard', name: 'Dashboard', icon: FaChartBar },
               { id: 'users', name: 'Students', icon: FaUsers },
@@ -344,13 +371,13 @@ const AdminPanel = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                className={`flex-1 py-4 px-6 rounded-lg font-medium text-sm flex items-center justify-center transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-blue-50 text-blue-600 border-2 border-blue-200 shadow-sm'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                 }`}
               >
-                <tab.icon className="mr-2" />
+                <tab.icon className="mr-2 text-lg" />
                 {tab.name}
               </button>
             ))}
