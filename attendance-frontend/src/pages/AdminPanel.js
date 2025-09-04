@@ -507,6 +507,19 @@ const AdminPanel = () => {
                       onChange={handleChange}
                     />
                   </div>
+                  {(modalType === 'add' || modalType === 'addFaculty') && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Password (optional)</label>
+                      <input
+                        type="password"
+                        name="password"
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-900 placeholder-gray-400"
+                        value={formData.password || ''}
+                        onChange={handleChange}
+                        placeholder="Leave blank to auto-generate"
+                      />
+                    </div>
+                  )}
                   {(modalType === 'add' || modalType === 'edit') && (
                     <>
                       <div>
