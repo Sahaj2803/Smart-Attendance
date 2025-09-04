@@ -29,6 +29,8 @@ export default function Login() {
 
       if (role === "faculty") {
         navigate("/facultyDashboard");
+      } else if (role === "admin") {
+        navigate("/admin");
       } else {
         navigate("/studentDashboard");
       }
@@ -58,6 +60,7 @@ export default function Login() {
         >
           <option value="student">Student</option>
           <option value="faculty">Faculty</option>
+          <option value="admin">Admin</option>
         </select>
 
         <input
