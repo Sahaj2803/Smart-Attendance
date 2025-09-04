@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaUsers, FaChalkboardTeacher, FaChartBar, FaCog, FaDownload, FaTrash, FaEdit, FaPlus, FaSignOutAlt } from 'react-icons/fa';
-import API from "../api"; // ✅ Use centralized API
+import axios from 'axios'; // ✅ Use centralized API
 import { useNavigate } from 'react-router-dom';
 
 const AdminPanel = () => {
@@ -22,7 +22,7 @@ const AdminPanel = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await API.get('/admin/users');
+      const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -35,7 +35,7 @@ const AdminPanel = () => {
   const fetchFaculty = async () => {
     try {
       setLoading(true);
-      const response = await API.get('/admin/faculty');
+      const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty');
       setFaculty(response.data);
     } catch (error) {
       console.error('Error fetching faculty:', error);
@@ -48,7 +48,7 @@ const AdminPanel = () => {
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await API.delete(`/admin/users/${userId}`);
+        await axios.delete(`https://smart-attendance-api-j1bv.onrender.com/api/admin/users/${userId}`);
         fetchUsers();
       } catch (error) {
         console.error('Error deleting user:', error);
@@ -59,7 +59,7 @@ const AdminPanel = () => {
   const handleDeleteFaculty = async (facultyId) => {
     if (window.confirm('Are you sure you want to delete this faculty member?')) {
       try {
-        await API.delete(`/admin/faculty/${facultyId}`);
+        await axios.delete(`https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty/${facultyId}`);
         fetchFaculty();
       } catch (error) {
         console.error('Error deleting faculty:', error);
@@ -70,11 +70,7 @@ const AdminPanel = () => {
   const openModal = (type, data = null) => {
     setModalType(type);
     setSelectedUser(data);
-    if (type === 'add' || type === 'addFaculty') {
-      setFormData({});
-    } else if (data) {
-      setFormData(data);
-    }
+    setFormData(data || {});
     setShowModal(true);
   };
 
@@ -91,7 +87,7 @@ const AdminPanel = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -99,16 +95,16 @@ const AdminPanel = () => {
     setLoading(true);
     try {
       if (modalType === 'add') {
-        await API.post('/admin/users', formData);
+        await axios.post('https://smart-attendance-api-j1bv.onrender.com/api/admin/users', formData);
         fetchUsers();
       } else if (modalType === 'edit') {
-        await API.put(`/admin/users/${selectedUser._id}`, formData);
+        await axios.put(`https://smart-attendance-api-j1bv.onrender.com/api/admin/users/${selectedUser._id}`, formData);
         fetchUsers();
       } else if (modalType === 'addFaculty') {
-        await API.post('/admin/faculty', formData);
+        await axios.post('https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty', formData);
         fetchFaculty();
       } else if (modalType === 'editFaculty') {
-        await API.put(`/admin/faculty/${selectedUser._id}`, formData);
+        await axios.put(`https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty/${selectedUser._id}`, formData);
         fetchFaculty();
       }
       closeModal();
@@ -341,42 +337,6 @@ const AdminPanel = () => {
     </div>
   );
 
-  const renderReportsTab = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Attendance Reports</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
-            <FaDownload className="mr-2" />
-            Daily Report
-          </button>
-          <button className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
-            <FaDownload className="mr-2" />
-            Weekly Report
-          </button>
-          <button className="bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
-            <FaDownload className="mr-2" />
-            Monthly Report
-          </button>
-        </div>
-      </div>
-      
-      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">System Reports</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
-            <FaDownload className="mr-2" />
-            User Activity Log
-          </button>
-          <button className="bg-red-500 hover:bg-red-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
-            <FaDownload className="mr-2" />
-            Error Logs
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderSettingsTab = () => (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
@@ -472,7 +432,6 @@ const AdminPanel = () => {
               { id: 'dashboard', name: 'Dashboard', icon: FaChartBar },
               { id: 'users', name: 'Students', icon: FaUsers },
               { id: 'faculty', name: 'Faculty', icon: FaChalkboardTeacher },
-              { id: 'reports', name: 'Reports', icon: FaDownload },
               { id: 'settings', name: 'Settings', icon: FaCog }
             ].map((tab) => (
               <button
@@ -496,7 +455,6 @@ const AdminPanel = () => {
           {activeTab === 'dashboard' && renderDashboard()}
           {activeTab === 'users' && renderUsersTab()}
           {activeTab === 'faculty' && renderFacultyTab()}
-          {activeTab === 'reports' && renderReportsTab()}
           {activeTab === 'settings' && renderSettingsTab()}
         </div>
       </div>
