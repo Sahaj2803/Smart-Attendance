@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FaUsers, FaChalkboardTeacher, FaChartBar, FaCog, FaDownload, FaTrash, FaEdit, FaPlus } from 'react-icons/fa';
-
+import { FaUsers, FaChalkboardTeacher, FaChartBar, FaCog, FaDownload, FaTrash, FaEdit, FaPlus, FaSignOutAlt } from 'react-icons/fa';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -11,6 +11,7 @@ const AdminPanel = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('add');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUsers();
@@ -19,30 +20,34 @@ const AdminPanel = () => {
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
-      // Set default data if API fails
       setUsers([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchFaculty = async () => {
     try {
+      setLoading(true);
       const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty');
       setFaculty(response.data);
     } catch (error) {
       console.error('Error fetching faculty:', error);
-      // Set default data if API fails
       setFaculty([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await axios.delete(`/api/admin/users/${userId}`);
+        await axios.delete(`https://smart-attendance-api-j1bv.onrender.com/api/admin/users/${userId}`);
         fetchUsers();
       } catch (error) {
         console.error('Error deleting user:', error);
@@ -53,7 +58,7 @@ const AdminPanel = () => {
   const handleDeleteFaculty = async (facultyId) => {
     if (window.confirm('Are you sure you want to delete this faculty member?')) {
       try {
-        await axios.delete(`/api/admin/faculty/${facultyId}`);
+        await axios.delete(`https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty/${facultyId}`);
         fetchFaculty();
       } catch (error) {
         console.error('Error deleting faculty:', error);
@@ -72,44 +77,70 @@ const AdminPanel = () => {
     setSelectedUser(null);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/');
+  };
+
   const renderDashboard = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
         <div className="flex items-center">
-          <FaUsers className="text-3xl text-blue-500 mr-4" />
+          <div className="bg-blue-100 p-3 rounded-xl mr-4">
+            <FaUsers className="text-2xl text-blue-600" />
+          </div>
           <div>
-            <p className="text-sm text-gray-600">Total Students</p>
-            <p className="text-2xl font-bold text-gray-800">{users.length}</p>
+            <p className="text-sm text-gray-500 font-medium">Total Students</p>
+            {loading ? (
+              <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+            ) : (
+              <p className="text-3xl font-bold text-gray-800">{users.length || 0}</p>
+            )}
+            <p className="text-xs text-green-600 font-medium">✓ Active</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
         <div className="flex items-center">
-          <FaChalkboardTeacher className="text-3xl text-green-500 mr-4" />
+          <div className="bg-green-100 p-3 rounded-xl mr-4">
+            <FaChalkboardTeacher className="text-2xl text-green-600" />
+          </div>
           <div>
-            <p className="text-sm text-gray-600">Total Faculty</p>
-            <p className="text-2xl font-bold text-gray-800">{faculty.length}</p>
+            <p className="text-sm text-gray-500 font-medium">Total Faculty</p>
+            {loading ? (
+              <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+            ) : (
+              <p className="text-3xl font-bold text-gray-800">{faculty.length || 0}</p>
+            )}
+            <p className="text-xs text-green-600 font-medium">✓ Available</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
         <div className="flex items-center">
-          <FaChartBar className="text-3xl text-yellow-500 mr-4" />
+          <div className="bg-yellow-100 p-3 rounded-xl mr-4">
+            <FaChartBar className="text-2xl text-yellow-600" />
+          </div>
           <div>
-            <p className="text-sm text-gray-600">Active Sessions</p>
-            <p className="text-2xl font-bold text-gray-800">12</p>
+            <p className="text-sm text-gray-500 font-medium">Active Sessions</p>
+            <p className="text-3xl font-bold text-gray-800">12</p>
+            <p className="text-xs text-blue-600 font-medium">↗ +2 today</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
         <div className="flex items-center">
-          <FaCog className="text-3xl text-purple-500 mr-4" />
+          <div className="bg-purple-100 p-3 rounded-xl mr-4">
+            <FaCog className="text-2xl text-purple-600" />
+          </div>
           <div>
-            <p className="text-sm text-gray-600">System Status</p>
-            <p className="text-2xl font-bold text-green-600">Online</p>
+            <p className="text-sm text-gray-500 font-medium">System Status</p>
+            <p className="text-3xl font-bold text-green-600">Online</p>
+            <p className="text-xs text-green-600 font-medium">✓ 99.9% uptime</p>
           </div>
         </div>
       </div>
@@ -117,13 +148,13 @@ const AdminPanel = () => {
   );
 
   const renderUsersTab = () => (
-    <div className="bg-white rounded-lg shadow-md">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-100">
       <div className="p-6 border-b border-gray-200">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">Student Management</h2>
           <button
             onClick={() => openModal('add')}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center transition-all duration-200"
           >
             <FaPlus className="mr-2" />
             Add Student
@@ -132,62 +163,77 @@ const AdminPanel = () => {
       </div>
       
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll No</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user._id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">{user.name?.charAt(0)}</span>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.rollNo || 'N/A'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.department || 'N/A'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => openModal('edit', user)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-3"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteUser(user._id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    <FaTrash />
-                  </button>
-                </td>
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading students...</p>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="text-gray-400 mb-4">
+              <FaUsers className="mx-auto h-12 w-12" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No students found</h3>
+            <p className="text-gray-500">Get started by adding your first student.</p>
+          </div>
+        ) : (
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll No</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {users.map((user) => (
+                <tr key={user._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                        <span className="text-sm font-medium text-gray-700">{user.name?.charAt(0)}</span>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.rollNo || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.department || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => openModal('edit', user)}
+                      className="text-indigo-600 hover:text-indigo-900 mr-3 p-2 rounded hover:bg-indigo-50"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user._id)}
+                      className="text-red-600 hover:text-red-900 p-2 rounded hover:bg-red-50"
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
 
   const renderFacultyTab = () => (
-    <div className="bg-white rounded-lg shadow-md">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-100">
       <div className="p-6 border-b border-gray-200">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">Faculty Management</h2>
           <button
             onClick={() => openModal('addFaculty')}
-            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center"
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center transition-all duration-200"
           >
             <FaPlus className="mr-2" />
             Add Faculty
@@ -196,82 +242,97 @@ const AdminPanel = () => {
       </div>
       
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {faculty.map((fac) => (
-              <tr key={fac._id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">{fac.name?.charAt(0)}</span>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{fac.name}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{fac.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{fac.department || 'N/A'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{fac.subject || 'N/A'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => openModal('editFaculty', fac)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-3"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteFaculty(fac._id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    <FaTrash />
-                  </button>
-                </td>
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading faculty...</p>
+          </div>
+        ) : faculty.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="text-gray-400 mb-4">
+              <FaChalkboardTeacher className="mx-auto h-12 w-12" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No faculty found</h3>
+            <p className="text-gray-500">Get started by adding your first faculty member.</p>
+          </div>
+        ) : (
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {faculty.map((fac) => (
+                <tr key={fac._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                        <span className="text-sm font-medium text-gray-700">{fac.name?.charAt(0)}</span>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{fac.name}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{fac.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{fac.department || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{fac.subject || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => openModal('editFaculty', fac)}
+                      className="text-indigo-600 hover:text-indigo-900 mr-3 p-2 rounded hover:bg-indigo-50"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteFaculty(fac._id)}
+                      className="text-red-600 hover:text-red-900 p-2 rounded hover:bg-red-50"
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
 
   const renderReportsTab = () => (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Attendance Reports</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="bg-blue-500 text-white p-4 rounded-lg hover:bg-blue-600 flex items-center justify-center">
+          <button className="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
             <FaDownload className="mr-2" />
             Daily Report
           </button>
-          <button className="bg-green-500 text-white p-4 rounded-lg hover:bg-green-600 flex items-center justify-center">
+          <button className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
             <FaDownload className="mr-2" />
             Weekly Report
           </button>
-          <button className="bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600 flex items-center justify-center">
+          <button className="bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
             <FaDownload className="mr-2" />
             Monthly Report
           </button>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">System Reports</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="bg-yellow-500 text-white p-4 rounded-lg hover:bg-yellow-600 flex items-center justify-center">
+          <button className="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
             <FaDownload className="mr-2" />
             User Activity Log
           </button>
-          <button className="bg-red-500 text-white p-4 rounded-lg hover:bg-red-600 flex items-center justify-center">
+          <button className="bg-red-500 hover:bg-red-600 text-white p-4 rounded-lg flex items-center justify-center transition-all duration-200">
             <FaDownload className="mr-2" />
             Error Logs
           </button>
@@ -282,7 +343,7 @@ const AdminPanel = () => {
 
   const renderSettingsTab = () => (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">System Settings</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -311,16 +372,16 @@ const AdminPanel = () => {
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Database Management</h3>
         <div className="space-y-4">
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+          <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-200">
             Create Backup
           </button>
-          <button className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 ml-2">
+          <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg ml-2 transition-all duration-200">
             Restore Backup
           </button>
-          <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 ml-2">
+          <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg ml-2 transition-all duration-200">
             Optimize Database
           </button>
         </div>
@@ -338,10 +399,32 @@ const AdminPanel = () => {
               <h1 className="text-4xl font-bold mb-2">Admin Panel</h1>
               <p className="text-blue-100 text-lg">Manage your smart attendance system</p>
             </div>
-            <div className="bg-white/20 p-4 rounded-full">
-              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-              </svg>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  fetchUsers();
+                  fetchFaculty();
+                }}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg flex items-center transition-all duration-200"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh Data
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg flex items-center transition-all duration-200"
+              >
+                <FaSignOutAlt className="mr-2" />
+                Logout
+              </button>
+              <div className="bg-white/20 p-4 rounded-full">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
