@@ -1,58 +1,59 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const app = express();
-require("dotenv").config();
+const dotenv = require("dotenv");
 
-// CORS Configuration
+dotenv.config();
+const app = express();
+
+// ✅ Allowed Origins (Frontend + Localhost)
 const allowedOrigins = [
-  "https://smart-attendance-git-main-sahaj2803s-projects.vercel.app",
-  "http://localhost:3000",
-  "http://localhost:3001"
+  "https://smart-attendance-git-main-sahaj2803s-projects.vercel.app", // Vercel
+  "http://localhost:3000", // Local React Dev
+  "http://localhost:3001"  // If needed for admin panel testing
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "x-auth-token", "Origin", "X-Requested-With", "Accept"],
-  optionsSuccessStatus: 200
-}));
-
-// Handle preflight requests
-app.options("*", cors());
+// ✅ CORS Configuration
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ Blocked By CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json());
 
-// Routes
+// ✅ API Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/attendance", require("./routes/attendance"));
 app.use("/api/admin", require("./routes/admin"));
 
-// MongoDB Connection
+// ✅ MongoDB Connection
 mongoose
-  .connect("mongodb+srv://sahaj2803:Sahaj%402803@attendance.5j9ey1h.mongodb.net/?retryWrites=true&w=majority&appName=Attendance")
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("✅ MongoDB Connected Successfully"))
   .catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
-// Error handling middleware
+// ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
-  if (err.message === 'Not allowed by CORS') {
-    return res.status(403).json({ error: 'CORS policy violation' });
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({ error: "CORS policy violation" });
   }
-  next(err);
+  console.error("🔥 Server Error:", err);
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
-
