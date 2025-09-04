@@ -74,54 +74,42 @@ const AdminPanel = () => {
 
   const renderDashboard = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
         <div className="flex items-center">
-          <div className="bg-blue-100 p-3 rounded-xl mr-4">
-            <FaUsers className="text-2xl text-blue-600" />
-          </div>
+          <FaUsers className="text-3xl text-blue-500 mr-4" />
           <div>
-            <p className="text-sm text-gray-500 font-medium">Total Students</p>
-            <p className="text-3xl font-bold text-gray-800">{users.length || 0}</p>
-            <p className="text-xs text-green-600 font-medium">✓ Active</p>
+            <p className="text-sm text-gray-600">Total Students</p>
+            <p className="text-2xl font-bold text-gray-800">{users.length}</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
         <div className="flex items-center">
-          <div className="bg-green-100 p-3 rounded-xl mr-4">
-            <FaChalkboardTeacher className="text-2xl text-green-600" />
-          </div>
+          <FaChalkboardTeacher className="text-3xl text-green-500 mr-4" />
           <div>
-            <p className="text-sm text-gray-500 font-medium">Total Faculty</p>
-            <p className="text-3xl font-bold text-gray-800">{faculty.length || 0}</p>
-            <p className="text-xs text-green-600 font-medium">✓ Available</p>
+            <p className="text-sm text-gray-600">Total Faculty</p>
+            <p className="text-2xl font-bold text-gray-800">{faculty.length}</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
         <div className="flex items-center">
-          <div className="bg-yellow-100 p-3 rounded-xl mr-4">
-            <FaChartBar className="text-2xl text-yellow-600" />
-          </div>
+          <FaChartBar className="text-3xl text-yellow-500 mr-4" />
           <div>
-            <p className="text-sm text-gray-500 font-medium">Active Sessions</p>
-            <p className="text-3xl font-bold text-gray-800">12</p>
-            <p className="text-xs text-blue-600 font-medium">↗ +2 today</p>
+            <p className="text-sm text-gray-600">Active Sessions</p>
+            <p className="text-2xl font-bold text-gray-800">12</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+      <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
         <div className="flex items-center">
-          <div className="bg-purple-100 p-3 rounded-xl mr-4">
-            <FaCog className="text-2xl text-purple-600" />
-          </div>
+          <FaCog className="text-3xl text-purple-500 mr-4" />
           <div>
-            <p className="text-sm text-gray-500 font-medium">System Status</p>
-            <p className="text-3xl font-bold text-green-600">Online</p>
-            <p className="text-xs text-green-600 font-medium">✓ 99.9% uptime</p>
+            <p className="text-sm text-gray-600">System Status</p>
+            <p className="text-2xl font-bold text-green-600">Online</p>
           </div>
         </div>
       </div>
