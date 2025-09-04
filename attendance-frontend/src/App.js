@@ -13,6 +13,7 @@ import FacultyDashboard from "./pages/FacultyDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import LandingPage from "./pages/LandingPage";
 import PrivateRoute from "./components/PrivateRoute";
+import AdminPanel from "./pages/AdminPanel";
 
 export default function App() {
   const [dark, setDark] = useState(true);
@@ -51,6 +52,15 @@ export default function App() {
               element={
                 <PrivateRoute allowedRoles={["student", "faculty"]}>
                   <ProfilePage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute allowedRoles={["admin"]}>
+                  <AdminPanel />
                 </PrivateRoute>
               }
             />
