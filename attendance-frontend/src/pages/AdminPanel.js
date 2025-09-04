@@ -492,7 +492,7 @@ const AdminPanel = () => {
                     <input
                       type="text"
                       name="name"
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-900 placeholder-gray-400"
                       value={formData.name || ''}
                       onChange={handleChange}
                     />
@@ -502,7 +502,7 @@ const AdminPanel = () => {
                     <input
                       type="email"
                       name="email"
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-900 placeholder-gray-400"
                       value={formData.email || ''}
                       onChange={handleChange}
                     />
@@ -514,7 +514,7 @@ const AdminPanel = () => {
                         <input
                           type="text"
                           name="rollNo"
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-900 placeholder-gray-400"
                           value={formData.rollNo || ''}
                           onChange={handleChange}
                         />
@@ -523,7 +523,7 @@ const AdminPanel = () => {
                         <label className="block text-sm font-medium text-gray-700">Department</label>
                         <select
                           name="department"
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-900"
                           value={formData.department || ''}
                           onChange={handleChange}
                         >
@@ -542,7 +542,7 @@ const AdminPanel = () => {
                         <label className="block text-sm font-medium text-gray-700">Department</label>
                         <select
                           name="department"
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-900"
                           value={formData.department || ''}
                           onChange={handleChange}
                         >
@@ -558,7 +558,7 @@ const AdminPanel = () => {
                         <input
                           type="text"
                           name="subject"
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-900 placeholder-gray-400"
                           value={formData.subject || ''}
                           onChange={handleChange}
                         />
