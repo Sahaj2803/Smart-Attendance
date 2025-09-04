@@ -11,6 +11,7 @@ const AdminPanel = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('add');
+  const [formData, setFormData] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,9 +67,14 @@ const AdminPanel = () => {
     }
   };
 
-  const openModal = (type, user = null) => {
+  const openModal = (type, data = null) => {
     setModalType(type);
-    setSelectedUser(user);
+    setSelectedUser(data);
+    if (type === 'add' || type === 'addFaculty') {
+      setFormData({});
+    } else if (data) {
+      setFormData(data);
+    }
     setShowModal(true);
   };
 
@@ -81,6 +87,36 @@ const AdminPanel = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/');
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (modalType === 'add') {
+        await axios.post('https://smart-attendance-api-j1bv.onrender.com/api/admin/users', formData);
+        fetchUsers();
+      } else if (modalType === 'edit') {
+        await axios.put(`https://smart-attendance-api-j1bv.onrender.com/api/admin/users/${selectedUser._id}`, formData);
+        fetchUsers();
+      } else if (modalType === 'addFaculty') {
+        await axios.post('https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty', formData);
+        fetchFaculty();
+      } else if (modalType === 'editFaculty') {
+        await axios.put(`https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty/${selectedUser._id}`, formData);
+        fetchFaculty();
+      }
+      closeModal();
+    } catch (error) {
+      console.error('Error saving data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderDashboard = () => (
@@ -471,42 +507,93 @@ const AdminPanel = () => {
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {modalType === 'add' ? 'Add New Student' : 'Edit Student'}
+                {modalType === 'add'
+                  ? 'Add New Student'
+                  : modalType === 'edit'
+                  ? 'Edit Student'
+                  : modalType === 'addFaculty'
+                  ? 'Add New Faculty'
+                  : 'Edit Faculty'}
               </h3>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Name</label>
                   <input
                     type="text"
+                    name="name"
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    defaultValue={selectedUser?.name || ''}
+                    value={formData.name || ''}
+                    onChange={handleChange}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Email</label>
                   <input
                     type="email"
+                    name="email"
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    defaultValue={selectedUser?.email || ''}
+                    value={formData.email || ''}
+                    onChange={handleChange}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Roll No</label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    defaultValue={selectedUser?.rollNo || ''}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Department</label>
-                  <select className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option>Computer Science</option>
-                    <option>Electrical Engineering</option>
-                    <option>Mechanical Engineering</option>
-                    <option>Civil Engineering</option>
-                  </select>
-                </div>
+                {(modalType === 'add' || modalType === 'edit') && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Roll No</label>
+                      <input
+                        type="text"
+                        name="rollNo"
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={formData.rollNo || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Department</label>
+                      <select
+                        name="department"
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={formData.department || ''}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select Department</option>
+                        <option>Computer Science</option>
+                        <option>Electrical Engineering</option>
+                        <option>Mechanical Engineering</option>
+                        <option>Civil Engineering</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+                {(modalType === 'addFaculty' || modalType === 'editFaculty') && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Department</label>
+                      <select
+                        name="department"
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={formData.department || ''}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select Department</option>
+                        <option>Computer Science</option>
+                        <option>Electrical Engineering</option>
+                        <option>Mechanical Engineering</option>
+                        <option>Civil Engineering</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Subject</label>
+                      <input
+                        type="text"
+                        name="subject"
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={formData.subject || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
@@ -519,7 +606,7 @@ const AdminPanel = () => {
                     type="submit"
                     className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                   >
-                    {modalType === 'add' ? 'Add' : 'Update'}
+                    {modalType.includes('add') ? 'Add' : 'Update'}
                   </button>
                 </div>
               </form>
