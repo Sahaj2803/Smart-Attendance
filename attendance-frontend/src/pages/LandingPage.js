@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import StudentAvatar from "../components/StudentAvatar";
 import FacultyAvatar from "../components/FacultyAvatar";
+import AdminAvatar from "../components/AdminAvatar";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -50,6 +51,20 @@ export default function LandingPage() {
         <div className="flex flex-col items-center mx-4">
           <FacultyAvatar />
           <p className="mt-3 text-lg font-medium">Faculty</p>
+        </div>
+      </div>
+
+      {/* Admin Section */}
+      <div className="mt-8 text-center">
+        <div className="flex flex-col items-center">
+          <AdminAvatar />
+          <p className="mt-3 text-lg font-medium text-purple-300">Administrator</p>
+          <button
+            onClick={() => navigate("/login")}
+            className="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded text-white font-semibold shadow-md mt-2"
+          >
+            Admin Login
+          </button>
         </div>
       </div>
     </div>
