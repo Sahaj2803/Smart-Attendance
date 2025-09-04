@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { FaUsers, FaChalkboardTeacher, FaChartBar, FaCog, FaDownload, FaTrash, FaEdit, FaPlus, FaSignOutAlt } from 'react-icons/fa';
-import axios from 'axios'; // ✅ Use centralized API
+import API from "../api"; // ✅ Use centralized API
 import { useNavigate } from 'react-router-dom';
 
 const AdminPanel = () => {
@@ -19,10 +20,11 @@ const AdminPanel = () => {
     fetchFaculty();
   }, []);
 
+  // ✅ Fetch All Students
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/users');
+      const response = await API.get('/admin/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -32,10 +34,11 @@ const AdminPanel = () => {
     }
   };
 
+  // ✅ Fetch All Faculty
   const fetchFaculty = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty');
+      const response = await API.get('/admin/faculty');
       setFaculty(response.data);
     } catch (error) {
       console.error('Error fetching faculty:', error);
@@ -45,10 +48,11 @@ const AdminPanel = () => {
     }
   };
 
+  // ✅ Delete Student
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await axios.delete(`https://smart-attendance-api-j1bv.onrender.com/api/admin/users/${userId}`);
+        await API.delete(`/admin/users/${userId}`);
         fetchUsers();
       } catch (error) {
         console.error('Error deleting user:', error);
@@ -56,10 +60,11 @@ const AdminPanel = () => {
     }
   };
 
+  // ✅ Delete Faculty
   const handleDeleteFaculty = async (facultyId) => {
     if (window.confirm('Are you sure you want to delete this faculty member?')) {
       try {
-        await axios.delete(`https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty/${facultyId}`);
+        await API.delete(`/admin/faculty/${facultyId}`);
         fetchFaculty();
       } catch (error) {
         console.error('Error deleting faculty:', error);
@@ -67,10 +72,15 @@ const AdminPanel = () => {
     }
   };
 
+  // ✅ Modal Open/Close
   const openModal = (type, data = null) => {
     setModalType(type);
     setSelectedUser(data);
-    setFormData(data || {});
+    if (type === 'add' || type === 'addFaculty') {
+      setFormData({});
+    } else if (data) {
+      setFormData(data);
+    }
     setShowModal(true);
   };
 
@@ -79,32 +89,35 @@ const AdminPanel = () => {
     setSelectedUser(null);
   };
 
+  // ✅ Logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/');
   };
 
+  // ✅ Form Input Change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // ✅ Add / Edit Student & Faculty
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (modalType === 'add') {
-        await axios.post('https://smart-attendance-api-j1bv.onrender.com/api/admin/users', formData);
+        await API.post('/admin/users', formData);
         fetchUsers();
       } else if (modalType === 'edit') {
-        await axios.put(`https://smart-attendance-api-j1bv.onrender.com/api/admin/users/${selectedUser._id}`, formData);
+        await API.put(`/admin/users/${selectedUser._id}`, formData);
         fetchUsers();
       } else if (modalType === 'addFaculty') {
-        await axios.post('https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty', formData);
+        await API.post('/admin/faculty', formData);
         fetchFaculty();
       } else if (modalType === 'editFaculty') {
-        await axios.put(`https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty/${selectedUser._id}`, formData);
+        await API.put(`/admin/faculty/${selectedUser._id}`, formData);
         fetchFaculty();
       }
       closeModal();
@@ -115,6 +128,7 @@ const AdminPanel = () => {
     }
   };
 
+  // ✅ Existing UI — No UI Changes
   const renderDashboard = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
@@ -457,123 +471,124 @@ const AdminPanel = () => {
           {activeTab === 'faculty' && renderFacultyTab()}
           {activeTab === 'settings' && renderSettingsTab()}
         </div>
-      </div>
 
-      {/* Modal for Add/Edit User */}
-      {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {modalType === 'add'
-                  ? 'Add New Student'
-                  : modalType === 'edit'
-                  ? 'Edit Student'
-                  : modalType === 'addFaculty'
-                  ? 'Add New Faculty'
-                  : 'Edit Faculty'}
-              </h3>
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    value={formData.name || ''}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    value={formData.email || ''}
-                    onChange={handleChange}
-                  />
-                </div>
-                {(modalType === 'add' || modalType === 'edit') && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Roll No</label>
-                      <input
-                        type="text"
-                        name="rollNo"
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                        value={formData.rollNo || ''}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Department</label>
-                      <select
-                        name="department"
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                        value={formData.department || ''}
-                        onChange={handleChange}
-                      >
-                        <option value="">Select Department</option>
-                        <option>Computer Science</option>
-                        <option>Electrical Engineering</option>
-                        <option>Mechanical Engineering</option>
-                        <option>Civil Engineering</option>
-                      </select>
-                    </div>
-                  </>
-                )}
-                {(modalType === 'addFaculty' || modalType === 'editFaculty') && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Department</label>
-                      <select
-                        name="department"
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                        value={formData.department || ''}
-                        onChange={handleChange}
-                      >
-                        <option value="">Select Department</option>
-                        <option>Computer Science</option>
-                        <option>Electrical Engineering</option>
-                        <option>Mechanical Engineering</option>
-                        <option>Civil Engineering</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Subject</label>
-                      <input
-                        type="text"
-                        name="subject"
-                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                        value={formData.subject || ''}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </>
-                )}
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                  >
-                    {modalType.includes('add') ? 'Add' : 'Update'}
-                  </button>
-                </div>
-              </form>
+        {/* Modal for Add/Edit User */}
+        {showModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  {modalType === 'add'
+                    ? 'Add New Student'
+                    : modalType === 'edit'
+                    ? 'Edit Student'
+                    : modalType === 'addFaculty'
+                    ? 'Add New Faculty'
+                    : 'Edit Faculty'}
+                </h3>
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                      value={formData.name || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                      value={formData.email || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  {(modalType === 'add' || modalType === 'edit') && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Roll No</label>
+                        <input
+                          type="text"
+                          name="rollNo"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                          value={formData.rollNo || ''}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Department</label>
+                        <select
+                          name="department"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                          value={formData.department || ''}
+                          onChange={handleChange}
+                        >
+                          <option value="">Select Department</option>
+                          <option>Computer Science</option>
+                          <option>Electrical Engineering</option>
+                          <option>Mechanical Engineering</option>
+                          <option>Civil Engineering</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                  {(modalType === 'addFaculty' || modalType === 'editFaculty') && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Department</label>
+                        <select
+                          name="department"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                          value={formData.department || ''}
+                          onChange={handleChange}
+                        >
+                          <option value="">Select Department</option>
+                          <option>Computer Science</option>
+                          <option>Electrical Engineering</option>
+                          <option>Mechanical Engineering</option>
+                          <option>Civil Engineering</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Subject</label>
+                        <input
+                          type="text"
+                          name="subject"
+                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                          value={formData.subject || ''}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                    >
+                      {modalType.includes('add') ? 'Add' : 'Update'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
 
 export default AdminPanel;
+ 
