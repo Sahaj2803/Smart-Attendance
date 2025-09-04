@@ -18,6 +18,8 @@ export default function Register() {
 
   const avatarSrc = form.role === "faculty"
     ? "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+    : form.role === "admin"
+    ? "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
     : "https://cdn-icons-png.flaticon.com/512/921/921347.png";
 
   const validate = () => {
@@ -100,6 +102,7 @@ export default function Register() {
           >
             <option value="student">Student</option>
             <option value="faculty">Faculty</option>
+            <option value="admin">Admin</option>
           </select>
         </div>
 
