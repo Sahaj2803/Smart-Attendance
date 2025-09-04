@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaUsers, FaChalkboardTeacher, FaChartBar, FaCog, FaDownload, FaTrash, FaEdit, FaPlus, FaSignOutAlt } from 'react-icons/fa';
-import axios from 'axios';
+import API from "../api"; // ✅ Use centralized API
 import { useNavigate } from 'react-router-dom';
 
 const AdminPanel = () => {
@@ -22,7 +22,7 @@ const AdminPanel = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/users');
+      const response = await API.get('/admin/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -35,7 +35,7 @@ const AdminPanel = () => {
   const fetchFaculty = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty');
+      const response = await API.get('/admin/faculty');
       setFaculty(response.data);
     } catch (error) {
       console.error('Error fetching faculty:', error);
@@ -48,7 +48,7 @@ const AdminPanel = () => {
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await axios.delete(`https://smart-attendance-api-j1bv.onrender.com/api/admin/users/${userId}`);
+        await API.delete(`/admin/users/${userId}`);
         fetchUsers();
       } catch (error) {
         console.error('Error deleting user:', error);
@@ -59,7 +59,7 @@ const AdminPanel = () => {
   const handleDeleteFaculty = async (facultyId) => {
     if (window.confirm('Are you sure you want to delete this faculty member?')) {
       try {
-        await axios.delete(`https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty/${facultyId}`);
+        await API.delete(`/admin/faculty/${facultyId}`);
         fetchFaculty();
       } catch (error) {
         console.error('Error deleting faculty:', error);
@@ -99,16 +99,16 @@ const AdminPanel = () => {
     setLoading(true);
     try {
       if (modalType === 'add') {
-        await axios.post('https://smart-attendance-api-j1bv.onrender.com/api/admin/users', formData);
+        await API.post('/admin/users', formData);
         fetchUsers();
       } else if (modalType === 'edit') {
-        await axios.put(`https://smart-attendance-api-j1bv.onrender.com/api/admin/users/${selectedUser._id}`, formData);
+        await API.put(`/admin/users/${selectedUser._id}`, formData);
         fetchUsers();
       } else if (modalType === 'addFaculty') {
-        await axios.post('https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty', formData);
+        await API.post('/admin/faculty', formData);
         fetchFaculty();
       } else if (modalType === 'editFaculty') {
-        await axios.put(`https://smart-attendance-api-j1bv.onrender.com/api/admin/faculty/${selectedUser._id}`, formData);
+        await API.put(`/admin/faculty/${selectedUser._id}`, formData);
         fetchFaculty();
       }
       closeModal();
