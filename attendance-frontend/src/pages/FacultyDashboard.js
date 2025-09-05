@@ -212,21 +212,87 @@ export default function FacultyDashboard() {
     return matchesSearch;
   });
 
-  // Analytics data
+  // Enhanced Analytics Data with Real Calculations
+  const getWeeklyTrend = () => {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
+    
+    return days.map((day, index) => {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + index);
+      
+      const dayAttendance = attendance.filter(a => {
+        const attendanceDate = new Date(a.date);
+        return attendanceDate.toDateString() === date.toDateString();
+      });
+      
+      const present = dayAttendance.filter(a => a.status === "present").length;
+      const absent = dayAttendance.filter(a => a.status === "absent").length;
+      
+      return {
+        day,
+        present,
+        absent,
+        total: present + absent,
+        percentage: present + absent > 0 ? Math.round((present / (present + absent)) * 100) : 0
+      };
+    });
+  };
+
+  const getDailyUpdates = () => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    const todayAttendance = attendance.filter(a => 
+      new Date(a.date).toDateString() === today.toDateString()
+    );
+    
+    const yesterdayAttendance = attendance.filter(a => 
+      new Date(a.date).toDateString() === yesterday.toDateString()
+    );
+    
+    const todayPresent = todayAttendance.filter(a => a.status === "present").length;
+    const todayAbsent = todayAttendance.filter(a => a.status === "absent").length;
+    const yesterdayPresent = yesterdayAttendance.filter(a => a.status === "present").length;
+    const yesterdayAbsent = yesterdayAttendance.filter(a => a.status === "absent").length;
+    
+    const presentChange = yesterdayPresent > 0 ? 
+      Math.round(((todayPresent - yesterdayPresent) / yesterdayPresent) * 100) : 0;
+    const absentChange = yesterdayAbsent > 0 ? 
+      Math.round(((todayAbsent - yesterdayAbsent) / yesterdayAbsent) * 100) : 0;
+    
+    return {
+      today: {
+        present: todayPresent,
+        absent: todayAbsent,
+        total: todayPresent + todayAbsent,
+        percentage: todayPresent + todayAbsent > 0 ? 
+          Math.round((todayPresent / (todayPresent + todayAbsent)) * 100) : 0
+      },
+      yesterday: {
+        present: yesterdayPresent,
+        absent: yesterdayAbsent,
+        total: yesterdayPresent + yesterdayAbsent,
+        percentage: yesterdayPresent + yesterdayAbsent > 0 ? 
+          Math.round((yesterdayPresent / (yesterdayPresent + yesterdayAbsent)) * 100) : 0
+      },
+      changes: {
+        present: presentChange,
+        absent: absentChange
+      }
+    };
+  };
+
   const analyticsData = {
     attendanceDistribution: [
       { name: "Present", value: attendance.filter(a => a.status === "present").length, color: "#10b981" },
       { name: "Absent", value: attendance.filter(a => a.status === "absent").length, color: "#ef4444" }
     ],
-    weeklyTrend: [
-      { day: "Mon", present: 8, absent: 2 },
-      { day: "Tue", present: 7, absent: 3 },
-      { day: "Wed", present: 9, absent: 1 },
-      { day: "Thu", present: 8, absent: 2 },
-      { day: "Fri", present: 6, absent: 4 },
-      { day: "Sat", present: 5, absent: 5 },
-      { day: "Sun", present: 0, absent: 0 }
-    ],
+    weeklyTrend: getWeeklyTrend(),
+    dailyUpdates: getDailyUpdates(),
     studentPerformance: students.map(student => {
       const studentAttendance = attendance.filter(a => a.student?._id === student._id);
       const presentCount = studentAttendance.filter(a => a.status === "present").length;
@@ -451,9 +517,147 @@ export default function FacultyDashboard() {
           </div>
         </div>
 
-        {/* Analytics Section */}
+        {/* Enhanced Analytics Section */}
         {showAnalytics && (
           <div className="mb-8 space-y-8">
+            {/* Daily Updates Section */}
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
+              <h3 className={`text-xl font-semibold mb-6 ${
+                darkMode ? "text-slate-100" : "text-slate-900"
+              }`}>
+                📅 Daily Attendance Update
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Today's Stats */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Today's Attendance</p>
+                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                        {analyticsData.dailyUpdates.today.percentage}%
+                      </p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400">
+                        {analyticsData.dailyUpdates.today.present} present, {analyticsData.dailyUpdates.today.absent} absent
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Yesterday's Stats */}
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Yesterday's Attendance</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        {analyticsData.dailyUpdates.yesterday.percentage}%
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        {analyticsData.dailyUpdates.yesterday.present} present, {analyticsData.dailyUpdates.yesterday.absent} absent
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-gray-500 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Present Change */}
+                <div className={`p-6 rounded-xl border ${
+                  analyticsData.dailyUpdates.changes.present >= 0 
+                    ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800"
+                    : "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-sm font-medium mb-1 ${
+                        analyticsData.dailyUpdates.changes.present >= 0 
+                          ? "text-green-600 dark:text-green-400" 
+                          : "text-red-600 dark:text-red-400"
+                      }`}>
+                        Present Change
+                      </p>
+                      <p className={`text-2xl font-bold ${
+                        analyticsData.dailyUpdates.changes.present >= 0 
+                          ? "text-green-900 dark:text-green-100" 
+                          : "text-red-900 dark:text-red-100"
+                      }`}>
+                        {analyticsData.dailyUpdates.changes.present >= 0 ? '+' : ''}{analyticsData.dailyUpdates.changes.present}%
+                      </p>
+                      <p className={`text-xs ${
+                        analyticsData.dailyUpdates.changes.present >= 0 
+                          ? "text-green-600 dark:text-green-400" 
+                          : "text-red-600 dark:text-red-400"
+                      }`}>
+                        vs yesterday
+                      </p>
+                    </div>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      analyticsData.dailyUpdates.changes.present >= 0 ? "bg-green-500" : "bg-red-500"
+                    }`}>
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={
+                          analyticsData.dailyUpdates.changes.present >= 0 
+                            ? "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" 
+                            : "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                        } />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Absent Change */}
+                <div className={`p-6 rounded-xl border ${
+                  analyticsData.dailyUpdates.changes.absent <= 0 
+                    ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800"
+                    : "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-sm font-medium mb-1 ${
+                        analyticsData.dailyUpdates.changes.absent <= 0 
+                          ? "text-green-600 dark:text-green-400" 
+                          : "text-red-600 dark:text-red-400"
+                      }`}>
+                        Absent Change
+                      </p>
+                      <p className={`text-2xl font-bold ${
+                        analyticsData.dailyUpdates.changes.absent <= 0 
+                          ? "text-green-900 dark:text-green-100" 
+                          : "text-red-900 dark:text-red-100"
+                      }`}>
+                        {analyticsData.dailyUpdates.changes.absent >= 0 ? '+' : ''}{analyticsData.dailyUpdates.changes.absent}%
+                      </p>
+                      <p className={`text-xs ${
+                        analyticsData.dailyUpdates.changes.absent <= 0 
+                          ? "text-green-600 dark:text-green-400" 
+                          : "text-red-600 dark:text-red-400"
+                      }`}>
+                        vs yesterday
+                      </p>
+                    </div>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      analyticsData.dailyUpdates.changes.absent <= 0 ? "bg-green-500" : "bg-red-500"
+                    }`}>
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={
+                          analyticsData.dailyUpdates.changes.absent <= 0 
+                            ? "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" 
+                            : "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                        } />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Analytics Charts */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               {/* Attendance Distribution */}
@@ -482,7 +686,7 @@ export default function FacultyDashboard() {
                 </ResponsiveContainer>
               </div>
 
-              {/* Weekly Trend */}
+              {/* Enhanced Weekly Trend */}
               <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
                 <h3 className={`text-xl font-semibold mb-6 ${
                   darkMode ? "text-slate-100" : "text-slate-900"
@@ -490,16 +694,67 @@ export default function FacultyDashboard() {
                   📈 Weekly Attendance Trend
                 </h3>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={analyticsData.weeklyTrend}>
+                  <LineChart data={analyticsData.weeklyTrend}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="day" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value, name) => [
+                        `${value} students`, 
+                        name === 'present' ? 'Present' : name === 'absent' ? 'Absent' : 'Percentage'
+                      ]}
+                      labelFormatter={(label) => `Day: ${label}`}
+                    />
                     <Legend />
-                    <Bar dataKey="present" fill="#10b981" name="Present" />
-                    <Bar dataKey="absent" fill="#ef4444" name="Absent" />
-                  </BarChart>
+                    <Line 
+                      type="monotone" 
+                      dataKey="present" 
+                      stroke="#10b981" 
+                      strokeWidth={3}
+                      name="Present"
+                      dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="absent" 
+                      stroke="#ef4444" 
+                      strokeWidth={3}
+                      name="Absent"
+                      dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="percentage" 
+                      stroke="#3b82f6" 
+                      strokeWidth={2}
+                      name="Percentage"
+                      strokeDasharray="5 5"
+                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
+                <div className="mt-4 grid grid-cols-7 gap-2">
+                  {analyticsData.weeklyTrend.map((day, index) => (
+                    <div key={day.day} className="text-center">
+                      <div className={`text-xs font-medium ${
+                        darkMode ? "text-slate-400" : "text-slate-600"
+                      }`}>
+                        {day.day}
+                      </div>
+                      <div className={`text-sm font-bold ${
+                        day.percentage >= 80 ? "text-green-600" :
+                        day.percentage >= 60 ? "text-yellow-600" : "text-red-600"
+                      }`}>
+                        {day.percentage}%
+                      </div>
+                      <div className={`text-xs ${
+                        darkMode ? "text-slate-500" : "text-slate-500"
+                      }`}>
+                        {day.total} total
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
