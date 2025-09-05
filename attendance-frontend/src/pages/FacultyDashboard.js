@@ -224,19 +224,21 @@ export default function FacultyDashboard() {
       date.setDate(startOfWeek.getDate() + index);
       
       const dayAttendance = attendance.filter(a => {
+        if (!a.date) return false;
         const attendanceDate = new Date(a.date);
         return attendanceDate.toDateString() === date.toDateString();
       });
       
       const present = dayAttendance.filter(a => a.status === "present").length;
       const absent = dayAttendance.filter(a => a.status === "absent").length;
+      const total = present + absent;
       
       return {
         day,
-        present,
-        absent,
-        total: present + absent,
-        percentage: present + absent > 0 ? Math.round((present / (present + absent)) * 100) : 0
+        present: present || 0,
+        absent: absent || 0,
+        total: total || 0,
+        percentage: total > 0 ? Math.round((present / total) * 100) : 0
       };
     });
   };
@@ -246,50 +248,57 @@ export default function FacultyDashboard() {
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
     
-    const todayAttendance = attendance.filter(a => 
-      new Date(a.date).toDateString() === today.toDateString()
-    );
+    const todayAttendance = attendance.filter(a => {
+      if (!a.date) return false;
+      return new Date(a.date).toDateString() === today.toDateString();
+    });
     
-    const yesterdayAttendance = attendance.filter(a => 
-      new Date(a.date).toDateString() === yesterday.toDateString()
-    );
+    const yesterdayAttendance = attendance.filter(a => {
+      if (!a.date) return false;
+      return new Date(a.date).toDateString() === yesterday.toDateString();
+    });
     
     const todayPresent = todayAttendance.filter(a => a.status === "present").length;
     const todayAbsent = todayAttendance.filter(a => a.status === "absent").length;
     const yesterdayPresent = yesterdayAttendance.filter(a => a.status === "present").length;
     const yesterdayAbsent = yesterdayAttendance.filter(a => a.status === "absent").length;
     
+    const todayTotal = todayPresent + todayAbsent;
+    const yesterdayTotal = yesterdayPresent + yesterdayAbsent;
+    
     const presentChange = yesterdayPresent > 0 ? 
-      Math.round(((todayPresent - yesterdayPresent) / yesterdayPresent) * 100) : 0;
+      Math.round(((todayPresent - yesterdayPresent) / yesterdayPresent) * 100) : 
+      todayPresent > 0 ? 100 : 0;
     const absentChange = yesterdayAbsent > 0 ? 
-      Math.round(((todayAbsent - yesterdayAbsent) / yesterdayAbsent) * 100) : 0;
+      Math.round(((todayAbsent - yesterdayAbsent) / yesterdayAbsent) * 100) : 
+      todayAbsent > 0 ? 100 : 0;
     
     return {
       today: {
-        present: todayPresent,
-        absent: todayAbsent,
-        total: todayPresent + todayAbsent,
-        percentage: todayPresent + todayAbsent > 0 ? 
-          Math.round((todayPresent / (todayPresent + todayAbsent)) * 100) : 0
+        present: todayPresent || 0,
+        absent: todayAbsent || 0,
+        total: todayTotal || 0,
+        percentage: todayTotal > 0 ? 
+          Math.round((todayPresent / todayTotal) * 100) : 0
       },
       yesterday: {
-        present: yesterdayPresent,
-        absent: yesterdayAbsent,
-        total: yesterdayPresent + yesterdayAbsent,
-        percentage: yesterdayPresent + yesterdayAbsent > 0 ? 
-          Math.round((yesterdayPresent / (yesterdayPresent + yesterdayAbsent)) * 100) : 0
+        present: yesterdayPresent || 0,
+        absent: yesterdayAbsent || 0,
+        total: yesterdayTotal || 0,
+        percentage: yesterdayTotal > 0 ? 
+          Math.round((yesterdayPresent / yesterdayTotal) * 100) : 0
       },
       changes: {
-        present: presentChange,
-        absent: absentChange
+        present: presentChange || 0,
+        absent: absentChange || 0
       }
     };
   };
 
   const analyticsData = {
     attendanceDistribution: [
-      { name: "Present", value: attendance.filter(a => a.status === "present").length, color: "#10b981" },
-      { name: "Absent", value: attendance.filter(a => a.status === "absent").length, color: "#ef4444" }
+      { name: "Present", value: attendance.filter(a => a.status === "present").length || 0, color: "#10b981" },
+      { name: "Absent", value: attendance.filter(a => a.status === "absent").length || 0, color: "#ef4444" }
     ],
     weeklyTrend: getWeeklyTrend(),
     dailyUpdates: getDailyUpdates(),
@@ -300,10 +309,10 @@ export default function FacultyDashboard() {
       const percentage = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
       
       return {
-        name: student.name,
-        attendance: percentage,
-        present: presentCount,
-        total: totalCount
+        name: student.name || "Unknown Student",
+        attendance: percentage || 0,
+        present: presentCount || 0,
+        total: totalCount || 0
       };
     }).sort((a, b) => b.attendance - a.attendance)
   };
@@ -681,7 +690,9 @@ export default function FacultyDashboard() {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value, name) => [`${value} students`, name]}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -699,10 +710,16 @@ export default function FacultyDashboard() {
                     <XAxis dataKey="day" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value, name) => [
-                        `${value} students`, 
-                        name === 'present' ? 'Present' : name === 'absent' ? 'Absent' : 'Percentage'
-                      ]}
+                      formatter={(value, name) => {
+                        if (name === 'present') {
+                          return [`${value} students`, 'Present'];
+                        } else if (name === 'absent') {
+                          return [`${value} students`, 'Absent'];
+                        } else if (name === 'percentage') {
+                          return [`${value}%`, 'Attendance %'];
+                        }
+                        return [value, name];
+                      }}
                       labelFormatter={(label) => `Day: ${label}`}
                     />
                     <Legend />
@@ -727,7 +744,7 @@ export default function FacultyDashboard() {
                       dataKey="percentage" 
                       stroke="#3b82f6" 
                       strokeWidth={2}
-                      name="Percentage"
+                      name="Attendance %"
                       strokeDasharray="5 5"
                       dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
                     />
