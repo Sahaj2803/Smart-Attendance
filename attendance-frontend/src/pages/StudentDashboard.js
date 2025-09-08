@@ -207,13 +207,13 @@ export default function StudentDashboard() {
 
         {/* Quick Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-2xl border border-blue-200 dark:border-blue-800 shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Days</p>
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-1">Total Days</p>
                 <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{attendanceStats.total}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -221,13 +221,13 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-green-200 dark:border-green-800 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Present</p>
+                <p className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1">Present</p>
                 <p className="text-3xl font-bold text-green-900 dark:text-green-100">{attendanceStats.present}</p>
               </div>
-              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -235,13 +235,13 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-red-200 dark:border-red-800 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-1">Absent</p>
+                <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Absent</p>
                 <p className="text-3xl font-bold text-red-900 dark:text-red-100">{attendanceStats.absent}</p>
               </div>
-              <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -249,13 +249,13 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-6 rounded-2xl border border-purple-200 dark:border-purple-800 shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-purple-200 dark:border-purple-800 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Percentage</p>
+                <p className="text-sm font-semibold text-purple-700 dark:text-purple-400 mb-1">Percentage</p>
                 <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{attendanceStats.percentage}%</p>
               </div>
-              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
@@ -274,30 +274,30 @@ export default function StudentDashboard() {
                 📊 Attendance Distribution
               </h3>
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className={`text-sm ${
-                  darkMode ? "text-slate-400" : "text-slate-600"
+                <div className="w-3 h-3 bg-green-500 rounded-full shadow-sm"></div>
+                <span className={`text-sm font-semibold ${
+                  darkMode ? "text-slate-400" : "text-slate-700"
                 }`}>Present</span>
-                <div className="w-3 h-3 bg-red-500 rounded-full ml-4"></div>
-                <span className={`text-sm ${
-                  darkMode ? "text-slate-400" : "text-slate-600"
+                <div className="w-3 h-3 bg-red-500 rounded-full ml-4 shadow-sm"></div>
+                <span className={`text-sm font-semibold ${
+                  darkMode ? "text-slate-400" : "text-slate-700"
                 }`}>Absent</span>
               </div>
             </div>
             
             {attendance.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                  <svg className="w-8 h-8 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h4 className={`text-lg font-medium mb-2 ${
+                <h4 className={`text-lg font-semibold mb-2 ${
                   darkMode ? "text-slate-100" : "text-slate-900"
                 }`}>
                   No Data Available
                 </h4>
-                <p className={`${
+                <p className={`font-medium ${
                   darkMode ? "text-slate-400" : "text-slate-600"
                 }`}>
                   No attendance records found.
@@ -334,17 +334,17 @@ export default function StudentDashboard() {
             </h3>
             {attendance.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                  <svg className="w-8 h-8 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
-                <h4 className={`text-lg font-medium mb-2 ${
+                <h4 className={`text-lg font-semibold mb-2 ${
                   darkMode ? "text-slate-100" : "text-slate-900"
                 }`}>
                   No Trend Data
                 </h4>
-                <p className={`${
+                <p className={`font-medium ${
                   darkMode ? "text-slate-400" : "text-slate-600"
                 }`}>
                   Attendance trend will appear here once you have records.
@@ -376,18 +376,18 @@ export default function StudentDashboard() {
               <table className="w-full">
                 <thead className="bg-slate-50 dark:bg-slate-700">
                   <tr>
-                    <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-slate-600"
+                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
+                      darkMode ? "text-slate-300" : "text-slate-700"
                     }`}>
                       Date
                     </th>
-                    <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-slate-600"
+                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
+                      darkMode ? "text-slate-300" : "text-slate-700"
                     }`}>
                       Status
                     </th>
-                    <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-slate-600"
+                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
+                      darkMode ? "text-slate-300" : "text-slate-700"
                     }`}>
                       Marked By
                     </th>
@@ -396,7 +396,7 @@ export default function StudentDashboard() {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                   {attendance.slice(0, 5).map((record) => (
                     <tr key={record._id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
                         darkMode ? "text-slate-100" : "text-slate-900"
                       }`}>
                         {new Date(record.date).toLocaleDateString('en-US', {
@@ -406,18 +406,18 @@ export default function StudentDashboard() {
                         })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
                           record.status === "present" 
                             ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" 
                             : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
                         }`}>
-                          <div className={`w-2 h-2 rounded-full mr-2 ${
+                          <div className={`w-2 h-2 rounded-full mr-2 shadow-sm ${
                             record.status === "present" ? "bg-green-500" : "bg-red-500"
                           }`}></div>
                           {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
                         </span>
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
                         darkMode ? "text-slate-400" : "text-slate-600"
                       }`}>
                         {record.markedBy?.name || "N/A"}
