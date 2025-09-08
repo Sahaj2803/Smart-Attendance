@@ -469,13 +469,13 @@ export default function FacultyDashboard() {
 
         {/* Quick Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-2xl border border-blue-200 dark:border-blue-800 shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Students</p>
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-1">Total Students</p>
                 <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{stats.totalStudents}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                 </svg>
@@ -483,13 +483,13 @@ export default function FacultyDashboard() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-green-200 dark:border-green-800 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Present Today</p>
+                <p className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1">Present Today</p>
                 <p className="text-3xl font-bold text-green-900 dark:text-green-100">{stats.presentToday}</p>
               </div>
-              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -497,13 +497,13 @@ export default function FacultyDashboard() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-red-200 dark:border-red-800 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-1">Absent Today</p>
+                <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Absent Today</p>
                 <p className="text-3xl font-bold text-red-900 dark:text-red-100">{stats.absentToday}</p>
               </div>
-              <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -511,13 +511,13 @@ export default function FacultyDashboard() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-6 rounded-2xl border border-purple-200 dark:border-purple-800 shadow-lg">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-purple-200 dark:border-purple-800 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Total Records</p>
+                <p className="text-sm font-semibold text-purple-700 dark:text-purple-400 mb-1">Total Records</p>
                 <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{stats.totalAttendance}</p>
               </div>
-              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
@@ -538,18 +538,18 @@ export default function FacultyDashboard() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Today's Stats */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-800 shadow-md">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Today's Attendance</p>
+                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-1">Today's Attendance</p>
                       <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                         {analyticsData.dailyUpdates.today.percentage}%
                       </p>
-                      <p className="text-xs text-blue-600 dark:text-blue-400">
+                      <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
                         {analyticsData.dailyUpdates.today.present} present, {analyticsData.dailyUpdates.today.absent} absent
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -558,18 +558,18 @@ export default function FacultyDashboard() {
                 </div>
 
                 {/* Yesterday's Stats */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-md">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Yesterday's Attendance</p>
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1">Yesterday's Attendance</p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {analyticsData.dailyUpdates.yesterday.percentage}%
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                         {analyticsData.dailyUpdates.yesterday.present} present, {analyticsData.dailyUpdates.yesterday.absent} absent
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-gray-500 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gray-500 rounded-xl flex items-center justify-center shadow-md">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -578,17 +578,17 @@ export default function FacultyDashboard() {
                 </div>
 
                 {/* Present Change */}
-                <div className={`p-6 rounded-xl border ${
+                <div className={`bg-white dark:bg-slate-800 p-6 rounded-xl border-2 shadow-md ${
                   analyticsData.dailyUpdates.changes.present >= 0 
-                    ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800"
-                    : "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800"
+                    ? "border-green-200 dark:border-green-800"
+                    : "border-red-200 dark:border-red-800"
                 }`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className={`text-sm font-medium mb-1 ${
+                      <p className={`text-sm font-semibold mb-1 ${
                         analyticsData.dailyUpdates.changes.present >= 0 
-                          ? "text-green-600 dark:text-green-400" 
-                          : "text-red-600 dark:text-red-400"
+                          ? "text-green-700 dark:text-green-400" 
+                          : "text-red-700 dark:text-red-400"
                       }`}>
                         Present Change
                       </p>
@@ -599,7 +599,7 @@ export default function FacultyDashboard() {
                       }`}>
                         {analyticsData.dailyUpdates.changes.present >= 0 ? '+' : ''}{analyticsData.dailyUpdates.changes.present}%
                       </p>
-                      <p className={`text-xs ${
+                      <p className={`text-xs font-medium ${
                         analyticsData.dailyUpdates.changes.present >= 0 
                           ? "text-green-600 dark:text-green-400" 
                           : "text-red-600 dark:text-red-400"
@@ -607,7 +607,7 @@ export default function FacultyDashboard() {
                         vs yesterday
                       </p>
                     </div>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${
                       analyticsData.dailyUpdates.changes.present >= 0 ? "bg-green-500" : "bg-red-500"
                     }`}>
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -622,17 +622,17 @@ export default function FacultyDashboard() {
                 </div>
 
                 {/* Absent Change */}
-                <div className={`p-6 rounded-xl border ${
+                <div className={`bg-white dark:bg-slate-800 p-6 rounded-xl border-2 shadow-md ${
                   analyticsData.dailyUpdates.changes.absent <= 0 
-                    ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800"
-                    : "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800"
+                    ? "border-green-200 dark:border-green-800"
+                    : "border-red-200 dark:border-red-800"
                 }`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className={`text-sm font-medium mb-1 ${
+                      <p className={`text-sm font-semibold mb-1 ${
                         analyticsData.dailyUpdates.changes.absent <= 0 
-                          ? "text-green-600 dark:text-green-400" 
-                          : "text-red-600 dark:text-red-400"
+                          ? "text-green-700 dark:text-green-400" 
+                          : "text-red-700 dark:text-red-400"
                       }`}>
                         Absent Change
                       </p>
@@ -643,7 +643,7 @@ export default function FacultyDashboard() {
                       }`}>
                         {analyticsData.dailyUpdates.changes.absent >= 0 ? '+' : ''}{analyticsData.dailyUpdates.changes.absent}%
                       </p>
-                      <p className={`text-xs ${
+                      <p className={`text-xs font-medium ${
                         analyticsData.dailyUpdates.changes.absent <= 0 
                           ? "text-green-600 dark:text-green-400" 
                           : "text-red-600 dark:text-red-400"
@@ -651,7 +651,7 @@ export default function FacultyDashboard() {
                         vs yesterday
                       </p>
                     </div>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${
                       analyticsData.dailyUpdates.changes.absent <= 0 ? "bg-green-500" : "bg-red-500"
                     }`}>
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -784,10 +784,10 @@ export default function FacultyDashboard() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {analyticsData.studentPerformance.slice(0, 6).map((student, index) => (
-                  <div key={student.name} className="bg-slate-50 dark:bg-slate-700 rounded-xl p-4 border border-slate-200 dark:border-slate-600">
+                  <div key={student.name} className="bg-white dark:bg-slate-700 rounded-xl p-4 border-2 border-slate-200 dark:border-slate-600 shadow-md hover:shadow-lg transition-shadow">
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-sm font-medium ${
-                        darkMode ? "text-slate-300" : "text-slate-600"
+                      <span className={`text-sm font-semibold ${
+                        darkMode ? "text-slate-300" : "text-slate-700"
                       }`}>
                         #{index + 1}
                       </span>
@@ -803,7 +803,7 @@ export default function FacultyDashboard() {
                     }`}>
                       {student.name}
                     </h4>
-                    <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+                    <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mb-2">
                       <div 
                         className={`h-2 rounded-full ${
                           student.attendance >= 80 ? "bg-green-500" : 
@@ -812,7 +812,7 @@ export default function FacultyDashboard() {
                         style={{ width: `${student.attendance}%` }}
                       ></div>
                     </div>
-                    <p className={`text-xs mt-1 ${
+                    <p className={`text-xs font-medium ${
                       darkMode ? "text-slate-400" : "text-slate-600"
                     }`}>
                       {student.present}/{student.total} days
@@ -926,9 +926,9 @@ export default function FacultyDashboard() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredStudents.map((student) => (
-                  <div key={student._id} className="bg-slate-50 dark:bg-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600">
+                  <div key={student._id} className="bg-white dark:bg-slate-700 rounded-xl p-6 border-2 border-slate-200 dark:border-slate-600 shadow-md hover:shadow-lg transition-shadow">
                     <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                      <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md">
                         {student.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-4">
@@ -937,7 +937,7 @@ export default function FacultyDashboard() {
                         }`}>
                           {student.name}
                         </h4>
-                        <p className={`text-sm ${
+                        <p className={`text-sm font-medium ${
                           darkMode ? "text-slate-400" : "text-slate-600"
                         }`}>
                           {student.email}
@@ -948,13 +948,13 @@ export default function FacultyDashboard() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => mark(student._id, "present")}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md"
                       >
                         ✓ Present
                       </button>
                       <button
                         onClick={() => mark(student._id, "absent")}
-                        className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md"
                       >
                         ✗ Absent
                       </button>
@@ -962,7 +962,7 @@ export default function FacultyDashboard() {
                     
                     <button
                       onClick={() => deleteStudent(student._id)}
-                      className="w-full mt-3 bg-slate-500 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="w-full mt-3 bg-slate-500 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md"
                     >
                       🗑️ Delete Student
                     </button>
