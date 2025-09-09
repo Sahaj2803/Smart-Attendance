@@ -73,43 +73,10 @@ export default function FacultyDashboard() {
     }
   }, [darkMode]);
 
-  // Ensure document class reflects initial preference on first render (defensive)
+  // Initialize dark mode from localStorage
   useEffect(() => {
-    try {
-      // If URL contains ?forceLight=1, force light mode
-      if (typeof window !== 'undefined' && window.location.search.includes('forceLight=1')) {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('darkMode', 'false');
-        setDarkMode(false);
-      } else {
-        // Make sure the document class matches saved setting (fix edge cases)
-        const saved = localStorage.getItem('darkMode');
-        if (saved === 'false') {
-          document.documentElement.classList.remove('dark');
-        } else if (saved === 'true') {
-          document.documentElement.classList.add('dark');
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-  }, []);
-
-  // Initialize dark mode from localStorage or system preference (robust)
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('darkMode');
-      if (saved === null) {
-        // If user hasn't set a preference, use system preference (light by default for most)
-        const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setDarkMode(prefersDark);
-      } else {
-        setDarkMode(saved === 'true');
-      }
-    } catch (e) {
-      // fallback to light mode on any error
-      setDarkMode(false);
-    }
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    setDarkMode(savedDarkMode);
   }, []);
 
   const mark = async (studentId, status) => {
@@ -565,7 +532,7 @@ export default function FacultyDashboard() {
             {/* Daily Updates Section */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
               <h3 className={`text-xl font-bold mb-6 ${
-                darkMode ? "text-slate-100" : "text-gray-900"
+                darkMode ? "text-slate-100" : "text-white"
               }`}>
                 📅 Daily Attendance Update
               </h3>
@@ -705,7 +672,7 @@ export default function FacultyDashboard() {
               {/* Attendance Distribution */}
               <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
                 <h3 className={`text-xl font-bold mb-6 ${
-                  darkMode ? "text-slate-100" : "text-gray-900"
+                  darkMode ? "text-slate-100" : "text-white"
                 }`}>
                   📊 Overall Attendance Distribution
                 </h3>
@@ -733,7 +700,7 @@ export default function FacultyDashboard() {
               {/* Enhanced Weekly Trend */}
               <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
                 <h3 className={`text-xl font-bold mb-6 ${
-                  darkMode ? "text-slate-100" : "text-gray-900"
+                  darkMode ? "text-slate-100" : "text-white"
                 }`}>
                   📈 Weekly Attendance Trend
                 </h3>
@@ -811,7 +778,7 @@ export default function FacultyDashboard() {
             {/* Student Performance */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
               <h3 className={`text-xl font-bold mb-6 ${
-                darkMode ? "text-slate-100" : "text-gray-900"
+                darkMode ? "text-slate-100" : "text-white"
               }`}>
                 🏆 Student Performance Ranking
               </h3>
@@ -926,12 +893,12 @@ export default function FacultyDashboard() {
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h3 className={`text-xl font-bold ${
-              darkMode ? "text-slate-100" : "text-gray-900"
+              darkMode ? "text-slate-100" : "text-white"
             }`}>
               👥 Student Management
             </h3>
             <p className={`text-sm font-medium mt-1 ${
-              darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+              darkMode ? "text-slate-400" : "text-white" // Changed from text-gray-700
             }`}>
               Mark attendance and manage your students
             </p>
@@ -946,12 +913,12 @@ export default function FacultyDashboard() {
                   </svg>
                 </div>
                 <h4 className={`text-lg font-bold mb-2 ${
-                  darkMode ? "text-slate-100" : "text-gray-900"
+                  darkMode ? "text-slate-100" : "text-white"
                 }`}>
                   No Students Found
                 </h4>
                 <p className={`font-medium ${
-                  darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                  darkMode ? "text-slate-400" : "text-white" 
                 }`}>
                   No students are registered in your class yet.
                 </p>
@@ -966,12 +933,12 @@ export default function FacultyDashboard() {
                       </div>
                       <div className="ml-4">
                         <h4 className={`font-bold ${
-                          darkMode ? "text-slate-100" : "text-gray-900"
+                          darkMode ? "text-slate-100" : "text-white"
                         }`}>
                           {student.name}
                         </h4>
                         <p className={`text-sm font-semibold ${
-                          darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                          darkMode ? "text-slate-400" : "text-white" 
                         }`}>
                           {student.email}
                         </p>
@@ -1016,7 +983,7 @@ export default function FacultyDashboard() {
                 📋 Recent Attendance Records
               </h3>
               <p className={`text-sm font-medium mt-1 ${
-                darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                darkMode ? "text-slate-400" : "text-white"
               }`}>
                 Latest attendance entries
               </p>
@@ -1027,22 +994,22 @@ export default function FacultyDashboard() {
                 <thead className="bg-slate-50 dark:bg-slate-700">
                   <tr>
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-gray-800
+                      darkMode ? "text-slate-300" : "text-white"
                     }`}>
                       Date
                     </th>
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-gray-800
+                      darkMode ? "text-slate-300" : "text-white"
                     }`}>
                       Student
                     </th>
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-gray-800
+                      darkMode ? "text-slate-300" : "text-white"
                     }`}>
                       Status
                     </th>
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-gray-800
+                      darkMode ? "text-slate-300" : "text-white"
                     }`}>
                       Marked By
                     </th>
@@ -1052,7 +1019,7 @@ export default function FacultyDashboard() {
                   {attendance.slice(0, 10).map((record) => (
                     <tr key={record._id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${
-                        darkMode ? "text-slate-100" : "text-gray-900"
+                        darkMode ? "text-slate-100" : "text-white"
                       }`}>
                         {new Date(record.date).toLocaleDateString('en-US', {
                           year: 'numeric',
@@ -1061,7 +1028,7 @@ export default function FacultyDashboard() {
                         })}
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
-                        darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                        darkMode ? "text-slate-400" : "text-white"
                       }`}>
                         {record.student?.name || "N/A"}
                       </td>
@@ -1078,7 +1045,7 @@ export default function FacultyDashboard() {
                         </span>
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
-                        darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                        darkMode ? "text-slate-400" : "text-white"
                       }`}>
                         {record.markedBy?.name || "N/A"}
                       </td>
