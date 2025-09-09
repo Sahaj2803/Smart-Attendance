@@ -330,7 +330,7 @@ export default function FacultyDashboard() {
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
               <p className={`text-lg font-medium ${
-                darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-slate-600
+                darkMode ? "text-slate-400" : "text-slate-600"
               }`}>
                 Loading faculty dashboard...
               </p>
@@ -358,12 +358,12 @@ export default function FacultyDashboard() {
                 </svg>
               </div>
               <h3 className={`text-lg font-semibold mb-2 ${
-                darkMode ? "text-slate-100" : "text-gray-900"
+                darkMode ? "text-slate-100" : "text-slate-900"
               }`}>
                 Error Loading Dashboard
               </h3>
               <p className={`mb-6 ${
-                darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-slate-600
+                darkMode ? "text-slate-400" : "text-slate-600"
               }`}>{error}</p>
               <button
                 onClick={() => window.location.reload()}
@@ -420,12 +420,12 @@ export default function FacultyDashboard() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
           <div>
             <h1 className={`text-3xl lg:text-4xl font-bold mb-2 ${
-              darkMode ? "text-slate-100" : "text-gray-900"
+              darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
             }`}>
               Faculty Dashboard
             </h1>
             <p className={`text-lg font-medium ${
-              darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+              darkMode ? "text-slate-400" : "text-slate-700" // Changed from text-gray-700
             }`}>
               Welcome back, {user?.name || "Professor"}! Manage your students and attendance.
             </p>
@@ -437,7 +437,7 @@ export default function FacultyDashboard() {
               className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors font-medium shadow-sm ${
                 showAnalytics 
                   ? "bg-purple-600 hover:bg-purple-700 text-white" 
-                  : "bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700" // Changed from text-slate-700
+                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
               }`}
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -473,7 +473,7 @@ export default function FacultyDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-1">Total Students</p>
-                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{stats.totalStudents}</p>
+                <p className="text-3xl font-bold text-blue-800 dark:text-blue-100">{stats.totalStudents}</p> {/* Changed from text-blue-900 */}
               </div>
               <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -487,7 +487,7 @@ export default function FacultyDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1">Present Today</p>
-                <p className="text-3xl font-bold text-green-900 dark:text-green-100">{stats.presentToday}</p>
+                <p className="text-3xl font-bold text-green-800 dark:text-green-100">{stats.presentToday}</p> {/* Changed from text-green-900 */}
               </div>
               <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -501,7 +501,7 @@ export default function FacultyDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Absent Today</p>
-                <p className="text-3xl font-bold text-red-900 dark:text-red-100">{stats.absentToday}</p>
+                <p className="text-3xl font-bold text-red-800 dark:text-red-100">{stats.absentToday}</p> {/* Changed from text-red-900 */}
               </div>
               <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -515,7 +515,7 @@ export default function FacultyDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-purple-700 dark:text-purple-400 mb-1">Total Records</p>
-                <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{stats.totalAttendance}</p>
+                <p className="text-3xl font-bold text-purple-800 dark:text-purple-100">{stats.totalAttendance}</p> {/* Changed from text-purple-900 */}
               </div>
               <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -532,7 +532,7 @@ export default function FacultyDashboard() {
             {/* Daily Updates Section */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
               <h3 className={`text-xl font-bold mb-6 ${
-                darkMode ? "text-slate-100" : "text-gray-900"
+                darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
               }`}>
                 📅 Daily Attendance Update
               </h3>
@@ -672,7 +672,7 @@ export default function FacultyDashboard() {
               {/* Attendance Distribution */}
               <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
                 <h3 className={`text-xl font-bold mb-6 ${
-                  darkMode ? "text-slate-100" : "text-gray-900"
+                  darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
                 }`}>
                   📊 Overall Attendance Distribution
                 </h3>
@@ -700,7 +700,7 @@ export default function FacultyDashboard() {
               {/* Enhanced Weekly Trend */}
               <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
                 <h3 className={`text-xl font-bold mb-6 ${
-                  darkMode ? "text-slate-100" : "text-gray-900"
+                  darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
                 }`}>
                   📈 Weekly Attendance Trend
                 </h3>
@@ -754,7 +754,7 @@ export default function FacultyDashboard() {
                   {analyticsData.weeklyTrend.map((day, index) => (
                     <div key={day.day} className="text-center">
                       <div className={`text-xs font-medium ${
-                        darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-slate-600
+                        darkMode ? "text-slate-400" : "text-slate-600"
                       }`}>
                         {day.day}
                       </div>
@@ -765,7 +765,7 @@ export default function FacultyDashboard() {
                         {day.percentage}%
                       </div>
                       <div className={`text-xs ${
-                        darkMode ? "text-slate-500" : "text-gray-800" // Changed from text-slate-500
+                        darkMode ? "text-slate-500" : "text-slate-500"
                       }`}>
                         {day.total} total
                       </div>
@@ -778,7 +778,7 @@ export default function FacultyDashboard() {
             {/* Student Performance */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
               <h3 className={`text-xl font-bold mb-6 ${
-                darkMode ? "text-slate-100" : "text-gray-900"
+                darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
               }`}>
                 🏆 Student Performance Ranking
               </h3>
@@ -787,7 +787,7 @@ export default function FacultyDashboard() {
                   <div key={student.name} className="bg-white dark:bg-slate-700 rounded-xl p-4 border-2 border-slate-200 dark:border-slate-600 shadow-md hover:shadow-lg transition-shadow">
                     <div className="flex items-center justify-between mb-2">
                       <span className={`text-sm font-semibold ${
-                        darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-slate-700
+                        darkMode ? "text-slate-300" : "text-slate-800" // Changed from text-slate-700
                       }`}>
                         #{index + 1}
                       </span>
@@ -799,7 +799,7 @@ export default function FacultyDashboard() {
                       </span>
                     </div>
                     <h4 className={`font-semibold mb-1 ${
-                      darkMode ? "text-slate-100" : "text-gray-900" // Changed from text-slate-900 (already good, but for consistency)
+                      darkMode ? "text-slate-100" : "text-slate-900"
                     }`}>
                       {student.name}
                     </h4>
@@ -813,7 +813,7 @@ export default function FacultyDashboard() {
                       ></div>
                     </div>
                     <p className={`text-xs font-medium ${
-                      darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-slate-600
+                      darkMode ? "text-slate-400" : "text-slate-600"
                     }`}>
                       {student.present}/{student.total} days
                     </p>
@@ -843,7 +843,7 @@ export default function FacultyDashboard() {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                     darkMode 
                       ? "bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400" 
-                      : "bg-white border-slate-300 text-slate-900 placeholder-gray-700" // Changed from placeholder-slate-500
+                      : "bg-white border-slate-300 text-slate-800 placeholder-slate-600" // Changed text-slate-900 and placeholder-slate-500
                   }`}
                 />
               </div>
@@ -855,7 +855,7 @@ export default function FacultyDashboard() {
                 className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                   darkMode 
                     ? "bg-slate-700 border-slate-600 text-slate-100" 
-                    : "bg-white border-slate-300 text-slate-900"
+                    : "bg-white border-slate-300 text-slate-800" // Changed text-slate-900
                 }`}
               >
                 <option value="all">All Students</option>
@@ -893,12 +893,12 @@ export default function FacultyDashboard() {
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h3 className={`text-xl font-bold ${
-              darkMode ? "text-slate-100" : "text-gray-900"
+              darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
             }`}>
               👥 Student Management
             </h3>
             <p className={`text-sm font-medium mt-1 ${
-              darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+              darkMode ? "text-slate-400" : "text-slate-700" // Changed from text-gray-700
             }`}>
               Mark attendance and manage your students
             </p>
@@ -913,12 +913,12 @@ export default function FacultyDashboard() {
                   </svg>
                 </div>
                 <h4 className={`text-lg font-bold mb-2 ${
-                  darkMode ? "text-slate-100" : "text-gray-900"
+                  darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
                 }`}>
                   No Students Found
                 </h4>
                 <p className={`font-medium ${
-                  darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                  darkMode ? "text-slate-400" : "text-slate-700" // Changed from text-gray-700
                 }`}>
                   No students are registered in your class yet.
                 </p>
@@ -933,12 +933,12 @@ export default function FacultyDashboard() {
                       </div>
                       <div className="ml-4">
                         <h4 className={`font-bold ${
-                          darkMode ? "text-slate-100" : "text-gray-900"
+                          darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
                         }`}>
                           {student.name}
                         </h4>
                         <p className={`text-sm font-semibold ${
-                          darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                          darkMode ? "text-slate-400" : "text-slate-700" // Changed from text-gray-700
                         }`}>
                           {student.email}
                         </p>
@@ -978,12 +978,12 @@ export default function FacultyDashboard() {
           <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
               <h3 className={`text-xl font-bold ${
-                darkMode ? "text-slate-100" : "text-gray-900"
+                darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
               }`}>
                 📋 Recent Attendance Records
               </h3>
               <p className={`text-sm font-medium mt-1 ${
-                darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                darkMode ? "text-slate-400" : "text-slate-700" // Changed from text-gray-700
               }`}>
                 Latest attendance entries
               </p>
@@ -994,22 +994,22 @@ export default function FacultyDashboard() {
                 <thead className="bg-slate-50 dark:bg-slate-700">
                   <tr>
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-gray-800
+                      darkMode ? "text-slate-300" : "text-slate-800" // Changed from text-gray-800
                     }`}>
                       Date
                     </th>
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-gray-800
+                      darkMode ? "text-slate-300" : "text-slate-800" // Changed from text-gray-800
                     }`}>
                       Student
                     </th>
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-gray-800
+                      darkMode ? "text-slate-300" : "text-slate-800" // Changed from text-gray-800
                     }`}>
                       Status
                     </th>
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-gray-800
+                      darkMode ? "text-slate-300" : "text-slate-800" // Changed from text-gray-800
                     }`}>
                       Marked By
                     </th>
@@ -1019,7 +1019,7 @@ export default function FacultyDashboard() {
                   {attendance.slice(0, 10).map((record) => (
                     <tr key={record._id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${
-                        darkMode ? "text-slate-100" : "text-gray-900"
+                        darkMode ? "text-slate-100" : "text-slate-900" // Changed from text-gray-900
                       }`}>
                         {new Date(record.date).toLocaleDateString('en-US', {
                           year: 'numeric',
@@ -1028,7 +1028,7 @@ export default function FacultyDashboard() {
                         })}
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
-                        darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                        darkMode ? "text-slate-400" : "text-slate-700" // Changed from text-gray-700
                       }`}>
                         {record.student?.name || "N/A"}
                       </td>
@@ -1045,7 +1045,7 @@ export default function FacultyDashboard() {
                         </span>
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
-                        darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
+                        darkMode ? "text-slate-400" : "text-slate-700" // Changed from text-gray-700
                       }`}>
                         {record.markedBy?.name || "N/A"}
                       </td>
