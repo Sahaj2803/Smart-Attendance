@@ -787,7 +787,7 @@ export default function FacultyDashboard() {
                   <div key={student.name} className="bg-white dark:bg-slate-700 rounded-xl p-4 border-2 border-slate-200 dark:border-slate-600 shadow-md hover:shadow-lg transition-shadow">
                     <div className="flex items-center justify-between mb-2">
                       <span className={`text-sm font-semibold ${
-                        darkMode ? "text-slate-300" : "text-gray-900" // Changed from text-slate-700
+                        darkMode ? "text-slate-300" : "text-white"
                       }`}>
                         #{index + 1}
                       </span>
@@ -799,7 +799,7 @@ export default function FacultyDashboard() {
                       </span>
                     </div>
                     <h4 className={`font-semibold mb-1 ${
-                      darkMode ? "text-slate-100" : "text-gray-900" // Changed from text-slate-900 (already good, but for consistency)
+                      darkMode ? "text-slate-100" : "text-white"
                     }`}>
                       {student.name}
                     </h4>
@@ -813,7 +813,7 @@ export default function FacultyDashboard() {
                       ></div>
                     </div>
                     <p className={`text-xs font-medium ${
-                      darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-slate-600
+                      darkMode ? "text-slate-400" : "text-white"
                     }`}>
                       {student.present}/{student.total} days
                     </p>
@@ -843,7 +843,7 @@ export default function FacultyDashboard() {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                     darkMode 
                       ? "bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400" 
-                      : "bg-white border-slate-300 text-slate-900 placeholder-gray-700" // Changed from placeholder-slate-500
+                      : "bg-white border-slate-300 text-slate-900 placeholder-gray-700" 
                   }`}
                 />
               </div>
@@ -898,7 +898,7 @@ export default function FacultyDashboard() {
               👥 Student Management
             </h3>
             <p className={`text-sm font-medium mt-1 ${
-              darkMode ? "text-slate-400" : "text-white" // Changed from text-gray-700
+              darkMode ? "text-slate-400" : "text-white"
             }`}>
               Mark attendance and manage your students
             </p>
@@ -978,7 +978,7 @@ export default function FacultyDashboard() {
           <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
               <h3 className={`text-xl font-bold ${
-                darkMode ? "text-slate-100" : "text-gray-900"
+                darkMode ? "text-slate-100" : "text-white"
               }`}>
                 📋 Recent Attendance Records
               </h3>
