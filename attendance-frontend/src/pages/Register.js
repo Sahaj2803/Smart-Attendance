@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import API from "../api";
 import { useNavigate, Link } from "react-router-dom";
-import { FaEye, FaEyeSlash, FaUser, FaLock, FaEnvelope, FaGraduationCap, FaChalkboardTeacher, FaUserShield, FaCheck, FaTimes } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUser, FaLock, FaEnvelope, FaGraduationCap, FaChalkboardTeacher, FaUserShield, FaTimes } from "react-icons/fa";
 
 export default function Register() {
   const [form, setForm] = useState({

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import API from "../api";
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaEyeSlash, FaUser, FaLock, FaEnvelope, FaGraduationCap, FaChalkboardTeacher, FaUserShield } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaLock, FaEnvelope, FaGraduationCap, FaChalkboardTeacher, FaUserShield } from "react-icons/fa";
 
 export default function Login() {
   const [email, setEmail] = useState("");

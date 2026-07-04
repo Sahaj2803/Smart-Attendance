@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { FaUsers, FaChalkboardTeacher, FaChartBar, FaCog, FaDownload, FaTrash, FaEdit, FaPlus, FaSignOutAlt, FaSun, FaMoon } from 'react-icons/fa';
+import { FaUsers, FaChalkboardTeacher, FaChartBar, FaCog, FaTrash, FaEdit, FaPlus, FaSignOutAlt, FaSun, FaMoon } from 'react-icons/fa';
 import API from "../api"; // ✅ Use centralized API
 import { useNavigate } from 'react-router-dom';
 
