@@ -130,6 +130,46 @@ async function ensureDashboard(studentId) {
 
 function makeAssistantAnswer(question, dashboard) {
   const text = question.toLowerCase();
+  const now = new Date();
+  const formattedDate = new Intl.DateTimeFormat("en-IN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Kolkata",
+  }).format(now);
+  const formattedTime = new Intl.DateTimeFormat("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  }).format(now);
+
+  if (
+    text.includes("today date") ||
+    text.includes("today's date") ||
+    text.includes("what is today date") ||
+    text.includes("what is the date") ||
+    text.includes("aaj ki date") ||
+    text.includes("date today")
+  ) {
+    return `Today is ${formattedDate}.`;
+  }
+
+  if (
+    text.includes("current time") ||
+    text.includes("what time") ||
+    text.includes("time now") ||
+    text.includes("abhi time") ||
+    text.includes("aaj time")
+  ) {
+    return `Current time is ${formattedTime} IST.`;
+  }
+
+  if (text.includes("today") || text.includes("aaj")) {
+    return `Today is ${formattedDate}. Your current focus class is ${dashboard.timetable.find((item) => item.status === "Current")?.subject || "not marked right now"}.`;
+  }
+
   if (text.includes("attendance")) {
     return "Your attendance can improve fastest by prioritizing current and upcoming lectures. Start with the subject below 85%, then keep a two-week no-absence streak.";
   }
@@ -156,6 +196,19 @@ async function askGemini(question, dashboard) {
   const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const dashboardContext = {
+    currentDate: new Intl.DateTimeFormat("en-IN", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      timeZone: "Asia/Kolkata",
+    }).format(new Date()),
+    currentTime: new Intl.DateTimeFormat("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    }).format(new Date()),
     subjects: dashboard.subjects.map((subject) => ({
       name: subject.name,
       attendance: subject.attendance,
@@ -190,6 +243,7 @@ async function askGemini(question, dashboard) {
                 "You are CampusIQ AI, an academic doubt assistant for a college student.",
                 "Answer in simple, helpful Hinglish/English depending on the user's language.",
                 "Keep answers practical, concise, and study-focused.",
+                "If the user asks today's date or current time, answer from the provided currentDate/currentTime context.",
                 "Use the dashboard context only when relevant.",
                 `Dashboard context: ${JSON.stringify(dashboardContext)}`,
                 `Student question: ${question}`,

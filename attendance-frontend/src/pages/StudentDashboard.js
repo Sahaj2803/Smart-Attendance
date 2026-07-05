@@ -588,7 +588,7 @@ export default function StudentDashboard() {
         body: (
           <div className="space-y-4">
             <StatusBadge tone={response.data.source === "gemini" ? "green" : "amber"}>
-              {response.data.source === "gemini" ? "Powered by Gemini" : "Local fallback answer"}
+              {response.data.source === "gemini" ? "Powered by Gemini" : "CampusIQ AI answer"}
             </StatusBadge>
             <div className="rounded-2xl bg-slate-50 p-4">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Question</p>
