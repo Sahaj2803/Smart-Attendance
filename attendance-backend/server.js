@@ -37,6 +37,7 @@ app.use(express.json());
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/attendance", require("./routes/attendance"));
 app.use("/api/admin", require("./routes/admin"));
+app.use("/api/student-dashboard", require("./routes/studentDashboard"));
 
 // ✅ MongoDB Connection
 mongoose

@@ -6,9 +6,11 @@ export default function DashboardCard({
   className = "",
   delay = 0,
   as: Component = motion.section,
+  ...props
 }) {
   return (
     <Component
+      {...props}
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay, ease: "easeOut" }}

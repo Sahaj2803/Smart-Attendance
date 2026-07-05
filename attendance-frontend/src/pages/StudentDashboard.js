@@ -85,6 +85,8 @@ const subjects = [
   { name: "Web Engineering", teacher: "Dr. Patel", attendance: 88, credits: 3, color: "bg-amber-500" },
 ];
 
+const subjectColors = ["bg-emerald-500", "bg-sky-500", "bg-violet-500", "bg-amber-500", "bg-rose-500"];
+
 const assignments = [
   { title: "DBMS ER Diagram Case Study", due: "Today, 6:00 PM", priority: "High", status: "Pending" },
   { title: "React Mini Project Review", due: "Tomorrow", priority: "Medium", status: "In Review" },
@@ -146,7 +148,7 @@ function buildTrend(records) {
   }));
 }
 
-function Sidebar({ open, onClose, navigate, onLogout }) {
+function Sidebar({ open, onClose, navigate, onLogout, onSectionNavigate }) {
   return (
     <>
       <div
@@ -188,6 +190,7 @@ function Sidebar({ open, onClose, navigate, onLogout }) {
                 type="button"
                 onClick={() => {
                   if (item.route) navigate(item.route);
+                  else onSectionNavigate(item.label);
                   onClose();
                 }}
                 className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
@@ -224,7 +227,21 @@ function Sidebar({ open, onClose, navigate, onLogout }) {
   );
 }
 
-function TopNavbar({ onOpenSidebar, user, darkModeUi, setDarkModeUi, navigate }) {
+function TopNavbar({
+  onOpenSidebar,
+  user,
+  darkModeUi,
+  setDarkModeUi,
+  navigate,
+  searchTerm,
+  setSearchTerm,
+  onSearch,
+  notifications,
+  showNotifications,
+  setShowNotifications,
+  showSettings,
+  setShowSettings,
+}) {
   return (
     <header className="sticky top-0 z-20 -mx-4 border-b border-white/70 bg-slate-50/80 px-4 py-4 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-b-[1.5rem] lg:border lg:bg-white/70">
       <div className="flex items-center gap-3">
@@ -238,13 +255,40 @@ function TopNavbar({ onOpenSidebar, user, darkModeUi, setDarkModeUi, navigate })
           <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onSearch();
+            }}
             placeholder="Search attendance, assignments, subjects..."
             className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
           />
         </div>
-        <button type="button" className="hidden rounded-2xl bg-white p-3 text-slate-500 shadow-sm transition hover:text-slate-950 sm:block">
+        <div className="relative hidden sm:block">
+        <button
+          type="button"
+          onClick={() => setShowNotifications((value) => !value)}
+          className="rounded-2xl bg-white p-3 text-slate-500 shadow-sm transition hover:text-slate-950"
+        >
           <Bell className="h-5 w-5" />
         </button>
+          {notifications?.some((item) => !item.read) && (
+            <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" />
+          )}
+          {showNotifications && (
+            <div className="absolute right-0 top-14 w-80 rounded-2xl border border-slate-100 bg-white p-3 shadow-2xl shadow-slate-200">
+              <p className="px-2 pb-2 text-sm font-black text-slate-900">Notifications</p>
+              <div className="space-y-2">
+                {(notifications || []).slice(0, 4).map((item) => (
+                  <div key={item._id || item.title} className="rounded-xl bg-slate-50 p-3">
+                    <p className="text-sm font-bold text-slate-800">{item.title}</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">{item.message}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => setDarkModeUi((value) => !value)}
@@ -255,7 +299,13 @@ function TopNavbar({ onOpenSidebar, user, darkModeUi, setDarkModeUi, navigate })
           <Moon className="h-4 w-4" />
           {darkModeUi ? "Dark" : "Light"}
         </button>
-        <button type="button" className="hidden rounded-2xl bg-white p-3 text-slate-500 shadow-sm transition hover:text-slate-950 md:block">
+        <button
+          type="button"
+          onClick={() => setShowSettings((value) => !value)}
+          className={`hidden rounded-2xl p-3 shadow-sm transition md:block ${
+            showSettings ? "bg-slate-950 text-white" : "bg-white text-slate-500 hover:text-slate-950"
+          }`}
+        >
           <Settings className="h-5 w-5" />
         </button>
         <button
@@ -302,13 +352,54 @@ function SectionHeader({ icon: Icon, title, action, inverse = false }) {
   );
 }
 
+function Modal({ title, children, onClose }) {
+  if (!title) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="max-h-[86vh] w-full max-w-2xl overflow-y-auto rounded-[1.5rem] bg-white p-6 shadow-2xl shadow-slate-950/20"
+      >
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <h2 className="text-xl font-black text-slate-950">{title}</h2>
+          <button type="button" onClick={onClose} className="rounded-xl bg-slate-100 p-2 text-slate-500 hover:text-slate-950">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+function downloadBlob(blob, filename) {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 export default function StudentDashboard() {
   const [attendance, setAttendance] = useState([]);
   const [user, setUser] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [darkModeUi, setDarkModeUi] = useState(false);
   const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [assistantQuestion, setAssistantQuestion] = useState("");
+  const [assistantLoading, setAssistantLoading] = useState(false);
+  const [modal, setModal] = useState(null);
+  const [notice, setNotice] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -319,8 +410,15 @@ export default function StudentDashboard() {
         const userInfo = getStoredUser();
         if (userInfo) setUser(userInfo);
 
-        const response = await API.get("/attendance/my");
-        setAttendance(Array.isArray(response.data) ? response.data : []);
+        const [attendanceResponse, dashboardResponse] = await Promise.all([
+          API.get("/attendance/my"),
+          API.get("/student-dashboard"),
+        ]);
+
+        setAttendance(Array.isArray(attendanceResponse.data) ? attendanceResponse.data : []);
+        setDashboardData(dashboardResponse.data.dashboard);
+        if (dashboardResponse.data.user) setUser(dashboardResponse.data.user);
+        setDarkModeUi(Boolean(dashboardResponse.data.dashboard?.settings?.darkModeUi));
       } catch (err) {
         console.error("Dashboard fetch error:", err);
         setError("Failed to load dashboard data");
@@ -332,6 +430,12 @@ export default function StudentDashboard() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timer = setTimeout(() => setNotice(""), 2600);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
   const stats = useMemo(() => {
     const present = attendance.filter((item) => item.status === "present").length;
     const absent = attendance.filter((item) => item.status === "absent").length;
@@ -341,9 +445,22 @@ export default function StudentDashboard() {
   }, [attendance]);
 
   const trendData = useMemo(() => buildTrend(attendance), [attendance]);
-  const currentLecture = timetable.find((item) => item.status === "Current") || timetable[0];
+  const studentSubjects = dashboardData?.subjects?.length ? dashboardData.subjects : subjects;
+  const studentAssignments = dashboardData?.assignments?.length ? dashboardData.assignments : assignments;
+  const studentTimetable = dashboardData?.timetable?.length ? dashboardData.timetable : timetable;
+  const studentCareer = dashboardData?.career || {
+    placementReadinessScore: Math.min(96, Math.round((stats.percentage + 74) / 2)),
+    resumeStatus: "Ready for review",
+    suggestedSkills: ["MongoDB indexing", "Interview DSA", "GitHub portfolio", "Aptitude speed drills"],
+    roadmap: ["Complete two DSA problems daily", "Polish MERN project case study", "Practice one mock interview"],
+    skills: careerSkills,
+  };
+  const notifications = dashboardData?.notifications || [];
+  const events = dashboardData?.events || [];
+  const conversations = dashboardData?.conversations?.length ? dashboardData.conversations : aiConversations.map((question) => ({ question, answer: "Saved AI conversation" }));
+  const currentLecture = studentTimetable.find((item) => item.status === "Current") || studentTimetable[0];
   const readinessScore = Math.min(96, Math.round((stats.percentage + 74) / 2));
-  const aiScore = Math.min(98, Math.round((readinessScore + 86) / 2));
+  const aiScore = Math.min(98, Math.round(((studentCareer.placementReadinessScore || readinessScore) + 86) / 2));
   const studentDepartment = user?.department || "Computer Science";
   const enrollmentNumber = user?.rollNo || user?.enrollmentNo || user?._id?.slice(-8)?.toUpperCase() || "Not assigned";
 
@@ -358,21 +475,21 @@ export default function StudentDashboard() {
     {
       icon: FileBarChart,
       label: "Assignments Pending",
-      value: assignments.filter((item) => item.status !== "Submitted").length,
+      value: studentAssignments.filter((item) => item.status !== "Submitted").length,
       helper: "Prioritized for this week",
       tone: "from-amber-500 to-orange-400",
     },
     {
       icon: BookOpen,
       label: "Subjects",
-      value: subjects.length,
+      value: studentSubjects.length,
       helper: "Active semester courses",
       tone: "from-sky-500 to-indigo-500",
     },
     {
       icon: CalendarClock,
       label: "Today's Classes",
-      value: timetable.length,
+      value: studentTimetable.length,
       helper: `${currentLecture?.subject || "Next class"} now`,
       tone: "from-fuchsia-500 to-rose-400",
     },
@@ -388,6 +505,217 @@ export default function StudentDashboard() {
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/login";
+  };
+
+  const mergeDashboard = (updates) => {
+    setDashboardData((current) => ({ ...(current || {}), ...updates }));
+  };
+
+  const scrollToSection = (label) => {
+    const targets = {
+      Dashboard: "dashboard",
+      Attendance: "attendance",
+      Subjects: "subjects",
+      Assignments: "assignments",
+      Timetable: "timetable",
+      "AI Career Mentor": "career",
+      "AI Doubt Assistant": "assistant",
+      Reports: "analytics",
+    };
+    const id = targets[label] || label;
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleSearch = () => {
+    const text = searchTerm.trim().toLowerCase();
+    if (!text) return;
+    const entries = [
+      ["attendance", "Attendance"],
+      ["subject", "Subjects"],
+      ["assignment", "Assignments"],
+      ["timetable", "Timetable"],
+      ["career", "AI Career Mentor"],
+      ["mentor", "AI Career Mentor"],
+      ["doubt", "AI Doubt Assistant"],
+      ["assistant", "AI Doubt Assistant"],
+      ["report", "Reports"],
+      ["analytics", "Reports"],
+      ["event", "events"],
+      ["planner", "planner"],
+    ];
+    const match = entries.find(([keyword]) => text.includes(keyword));
+    if (match?.[1] === "events") openEvents();
+    else if (match?.[1] === "planner") openStudyPlanner();
+    else if (match) scrollToSection(match[1]);
+    else setNotice("No matching dashboard section found");
+  };
+
+  const askAssistant = async (question = assistantQuestion) => {
+    const cleanQuestion = question.trim();
+    if (!cleanQuestion) return;
+
+    try {
+      setAssistantLoading(true);
+      const response = await API.post("/student-dashboard/assistant/ask", { question: cleanQuestion });
+      mergeDashboard({ conversations: response.data.conversations });
+      setAssistantQuestion("");
+      setModal({
+        title: "AI Assistant Answer",
+        body: (
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Question</p>
+              <p className="mt-2 font-bold text-slate-900">{response.data.question}</p>
+            </div>
+            <div className="rounded-2xl bg-sky-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-500">Answer</p>
+              <p className="mt-2 leading-7 text-slate-700">{response.data.answer}</p>
+            </div>
+          </div>
+        ),
+      });
+    } catch (err) {
+      setNotice(err.response?.data?.error || "AI assistant failed");
+    } finally {
+      setAssistantLoading(false);
+    }
+  };
+
+  const openSubjectNotes = (subject) => {
+    setModal({
+      title: `${subject.name} Notes`,
+      body: (
+        <div className="space-y-4">
+          <p className="leading-7 text-slate-600">{subject.notes || "No faculty notes are available for this subject yet."}</p>
+          <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+            Teacher: <span className="font-bold text-slate-900">{subject.teacher}</span> - Credits:{" "}
+            <span className="font-bold text-slate-900">{subject.credits}</span>
+          </div>
+        </div>
+      ),
+    });
+  };
+
+  const openAssignment = async (assignment) => {
+    try {
+      if (assignment._id) {
+        const response = await API.patch(`/student-dashboard/assignments/${assignment._id}/status`, { status: "In Progress" });
+        mergeDashboard({ assignments: response.data.assignments });
+      }
+      setModal({
+        title: assignment.title,
+        body: (
+          <div className="space-y-4">
+            <p className="leading-7 text-slate-600">{assignment.description || "Assignment details are not available yet."}</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-bold text-slate-400">Due</p>
+                <p className="mt-1 font-black text-slate-900">{assignment.due}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-bold text-slate-400">Priority</p>
+                <p className="mt-1 font-black text-slate-900">{assignment.priority}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-bold text-slate-400">Status</p>
+                <p className="mt-1 font-black text-slate-900">In Progress</p>
+              </div>
+            </div>
+          </div>
+        ),
+      });
+    } catch (err) {
+      setNotice(err.response?.data?.error || "Assignment could not be opened");
+    }
+  };
+
+  const openCareerMentor = () => {
+    setModal({
+      title: "AI Career Mentor Roadmap",
+      body: (
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-indigo-50 p-4">
+            <p className="text-sm font-bold text-indigo-700">Resume Status</p>
+            <p className="mt-1 text-lg font-black text-slate-950">{studentCareer.resumeStatus}</p>
+          </div>
+          {(studentCareer.roadmap || []).map((step, index) => (
+            <div key={step} className="flex gap-3 rounded-2xl bg-slate-50 p-4">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-sm font-black text-white">{index + 1}</span>
+              <p className="font-bold leading-7 text-slate-700">{step}</p>
+            </div>
+          ))}
+        </div>
+      ),
+    });
+  };
+
+  const openStudyPlanner = async () => {
+    try {
+      const response = await API.post("/student-dashboard/study-plan");
+      setModal({
+        title: "AI Study Planner",
+        body: (
+          <div className="space-y-4">
+            {response.data.plan.map((group) => (
+              <div key={group.title} className="rounded-2xl bg-slate-50 p-4">
+                <p className="font-black text-slate-950">{group.title}</p>
+                <ul className="mt-3 space-y-2">
+                  {group.tasks.map((task) => (
+                    <li key={task} className="flex gap-2 text-sm font-semibold text-slate-600">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      {task}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ),
+      });
+    } catch (err) {
+      setNotice(err.response?.data?.error || "Study planner failed");
+    }
+  };
+
+  const openEvents = () => {
+    setModal({
+      title: "Campus Events",
+      body: (
+        <div className="space-y-3">
+          {(events.length ? events : [{ title: "No events available", date: "Soon", venue: "Campus" }]).map((event) => (
+            <div key={`${event.title}-${event.date}`} className="rounded-2xl bg-slate-50 p-4">
+              <p className="font-black text-slate-950">{event.title}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-500">{event.date} - {event.venue}</p>
+            </div>
+          ))}
+        </div>
+      ),
+    });
+  };
+
+  const downloadAttendance = async () => {
+    try {
+      const response = await API.get("/student-dashboard/attendance/export", { responseType: "blob" });
+      downloadBlob(response.data, "attendance.csv");
+      setNotice("Attendance CSV downloaded");
+    } catch (err) {
+      setNotice(err.response?.data?.error || "Attendance download failed");
+    }
+  };
+
+  const updateDashboardSetting = async (key, value) => {
+    try {
+      const response = await API.patch("/student-dashboard/settings", { [key]: value });
+      mergeDashboard({ settings: response.data.settings });
+      if (key === "darkModeUi") setDarkModeUi(value);
+    } catch (err) {
+      setNotice(err.response?.data?.error || "Settings update failed");
+    }
+  };
+
+  const toggleDarkModeSetting = (updater) => {
+    const nextValue = typeof updater === "function" ? updater(darkModeUi) : updater;
+    updateDashboardSetting("darkModeUi", nextValue);
   };
 
   if (loading) {
@@ -435,20 +763,67 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_30%),radial-gradient(circle_at_top_right,#dcfce7,transparent_28%),linear-gradient(135deg,#f8fafc,#eef2ff_54%,#f0fdfa)] text-slate-950">
+      {notice && (
+        <div className="fixed right-4 top-4 z-[60] rounded-2xl bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-2xl shadow-slate-300">
+          {notice}
+        </div>
+      )}
+      {modal && (
+        <Modal title={modal.title} onClose={() => setModal(null)}>
+          {modal.body}
+        </Modal>
+      )}
       <div className="mx-auto grid max-w-[1480px] gap-0 lg:grid-cols-[18rem_1fr]">
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} navigate={navigate} onLogout={handleLogout} />
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          navigate={navigate}
+          onLogout={handleLogout}
+          onSectionNavigate={scrollToSection}
+        />
 
         <main className="min-w-0 px-4 pb-10 sm:px-6 lg:px-8">
           <TopNavbar
             onOpenSidebar={() => setSidebarOpen(true)}
             user={user}
             darkModeUi={darkModeUi}
-            setDarkModeUi={setDarkModeUi}
+            setDarkModeUi={toggleDarkModeSetting}
             navigate={navigate}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            onSearch={handleSearch}
+            notifications={notifications}
+            showNotifications={showNotifications}
+            setShowNotifications={setShowNotifications}
+            showSettings={showSettings}
+            setShowSettings={setShowSettings}
           />
 
+          {showSettings && (
+            <DashboardCard className="mt-6" delay={0.01}>
+              <SectionHeader icon={Settings} title="Dashboard Settings" />
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  ["darkModeUi", "Dark Mode UI", darkModeUi],
+                  ["compactCards", "Compact Cards", Boolean(dashboardData?.settings?.compactCards)],
+                  ["emailAlerts", "Email Alerts", dashboardData?.settings?.emailAlerts !== false],
+                ].map(([key, label, checked]) => (
+                  <label key={key} className="flex cursor-pointer items-center justify-between rounded-2xl bg-slate-50 p-4">
+                    <span className="text-sm font-black text-slate-700">{label}</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(checked)}
+                      onChange={(event) => updateDashboardSetting(key, event.target.checked)}
+                      className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                  </label>
+                ))}
+              </div>
+            </DashboardCard>
+          )}
+
           <div className="mt-6 space-y-6">
-            <DashboardCard className="overflow-hidden p-0" delay={0.02}>
+            <DashboardCard id="dashboard" className="overflow-hidden p-0" delay={0.02}>
               <div className="relative grid gap-6 p-6 lg:grid-cols-[1.35fr_0.65fr] lg:p-7">
                 <div className="pointer-events-none absolute right-0 top-0 h-44 w-44 rounded-full bg-sky-200/50 blur-3xl" />
                 <div className="pointer-events-none absolute bottom-0 left-1/3 h-36 w-36 rounded-full bg-emerald-200/60 blur-3xl" />
@@ -466,7 +841,7 @@ export default function StudentDashboard() {
                   <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     {[
                       ["Department", studentDepartment],
-                      ["Semester", user?.semester || "Semester 6"],
+                      ["Semester", dashboardData?.semester || user?.semester || "Semester 6"],
                       ["Enrollment", enrollmentNumber],
                       ["Today", formatDate(new Date())],
                     ].map(([label, value]) => (
@@ -494,7 +869,11 @@ export default function StudentDashboard() {
                       <span className="text-slate-300">Starts</span>
                       <span className="font-bold">{currentLecture?.time}</span>
                     </div>
-                    <button type="button" className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-slate-100">
+                    <button
+                      type="button"
+                      onClick={openStudyPlanner}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-slate-100"
+                    >
                       Open Study Planner
                       <ChevronRight className="h-4 w-4" />
                     </button>
@@ -510,7 +889,7 @@ export default function StudentDashboard() {
             </div>
 
             <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-              <DashboardCard delay={0.05}>
+              <DashboardCard id="attendance" delay={0.05}>
                 <SectionHeader icon={ClipboardCheck} title="Attendance Intelligence" />
                 <div className="grid items-center gap-6 md:grid-cols-[auto_1fr]">
                   <div className="mx-auto">
@@ -553,10 +932,10 @@ export default function StudentDashboard() {
                 </div>
               </DashboardCard>
 
-              <DashboardCard delay={0.08}>
+              <DashboardCard id="timetable" delay={0.08}>
                 <SectionHeader icon={CalendarClock} title="Today's Timetable" action={<StatusBadge tone="amber">Next in 42 min</StatusBadge>} />
                 <div className="space-y-3">
-                  {timetable.map((item) => (
+                  {studentTimetable.map((item) => (
                     <motion.div
                       key={`${item.time}-${item.subject}`}
                       whileHover={{ x: 4 }}
@@ -572,7 +951,7 @@ export default function StudentDashboard() {
                         </div>
                         <div>
                           <p className="text-sm font-black text-slate-950">{item.subject}</p>
-                          <p className="mt-1 text-xs font-semibold text-slate-500">{item.faculty} · {item.room}</p>
+                          <p className="mt-1 text-xs font-semibold text-slate-500">{item.faculty} - {item.room}</p>
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-3 sm:justify-end">
@@ -586,10 +965,10 @@ export default function StudentDashboard() {
             </div>
 
             <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-              <DashboardCard delay={0.1}>
+              <DashboardCard id="subjects" delay={0.1}>
                 <SectionHeader icon={BookOpen} title="Subjects" />
                 <div className="grid gap-4 md:grid-cols-2">
-                  {subjects.map((subject) => (
+                  {studentSubjects.map((subject, index) => (
                     <div key={subject.name} className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -604,22 +983,34 @@ export default function StudentDashboard() {
                           <span>{subject.attendance}%</span>
                         </div>
                         <div className="h-2.5 overflow-hidden rounded-full bg-white">
-                          <div className={`h-full rounded-full ${subject.color}`} style={{ width: `${subject.attendance}%` }} />
+                          <div className={`h-full rounded-full ${subject.color || subjectColors[index % subjectColors.length]}`} style={{ width: `${subject.attendance}%` }} />
                         </div>
                       </div>
                       <div className="mt-4 flex gap-2">
-                        <button type="button" className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:text-slate-950">Notes</button>
-                        <button type="button" className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:text-slate-950">Ask AI</button>
+                        <button
+                          type="button"
+                          onClick={() => openSubjectNotes(subject)}
+                          className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:text-slate-950"
+                        >
+                          Notes
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => askAssistant(`Explain ${subject.name} important topics for my exam`)}
+                          className="rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:text-slate-950"
+                        >
+                          Ask AI
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
               </DashboardCard>
 
-              <DashboardCard delay={0.12}>
+              <DashboardCard id="assignments" delay={0.12}>
                 <SectionHeader icon={FileBarChart} title="Upcoming Assignments" />
                 <div className="space-y-3">
-                  {assignments.map((assignment) => (
+                  {studentAssignments.map((assignment) => (
                     <div key={assignment.title} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -632,7 +1023,13 @@ export default function StudentDashboard() {
                       </div>
                       <div className="mt-4 flex items-center justify-between">
                         <StatusBadge tone="slate">{assignment.status}</StatusBadge>
-                        <button type="button" className="text-sm font-black text-indigo-600 hover:text-indigo-800">Open</button>
+                        <button
+                          type="button"
+                          onClick={() => openAssignment(assignment)}
+                          className="text-sm font-black text-indigo-600 hover:text-indigo-800"
+                        >
+                          Open
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -641,24 +1038,28 @@ export default function StudentDashboard() {
             </div>
 
             <div className="grid gap-6 xl:grid-cols-2">
-              <DashboardCard className="bg-gradient-to-br from-slate-950 to-indigo-950 text-white" delay={0.14}>
+              <DashboardCard id="career" className="bg-gradient-to-br from-slate-950 to-indigo-950 text-white" delay={0.14}>
                 <SectionHeader
                   icon={BriefcaseBusiness}
                   title="AI Career Mentor"
                   inverse
-                  action={<StatusBadge tone="green">{readinessScore}% ready</StatusBadge>}
+                  action={<StatusBadge tone="green">{studentCareer.placementReadinessScore || readinessScore}% ready</StatusBadge>}
                 />
                 <div className="grid gap-5 md:grid-cols-[0.9fr_1.1fr]">
                   <div>
                     <p className="text-sm font-semibold text-indigo-100">Placement Readiness Score</p>
-                    <p className="mt-2 text-5xl font-black text-white">{readinessScore}</p>
-                    <p className="mt-3 text-sm leading-6 text-slate-300">Resume is ready for review. Keep improving DSA and communication consistency.</p>
-                    <button type="button" className="mt-5 rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-slate-100">
+                    <p className="mt-2 text-5xl font-black text-white">{studentCareer.placementReadinessScore || readinessScore}</p>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">{studentCareer.resumeStatus}. Keep improving your suggested skills and roadmap.</p>
+                    <button
+                      type="button"
+                      onClick={openCareerMentor}
+                      className="mt-5 rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-950 transition hover:bg-slate-100"
+                    >
                       Open AI Career Mentor
                     </button>
                   </div>
                   <div className="space-y-4">
-                    {careerSkills.map((skill) => (
+                    {(studentCareer.skills?.length ? studentCareer.skills : careerSkills).map((skill) => (
                       <div key={skill.name}>
                         <div className="mb-1 flex justify-between text-xs font-bold text-slate-300">
                           <span>{skill.name}</span>
@@ -671,13 +1072,13 @@ export default function StudentDashboard() {
                     ))}
                     <div className="rounded-2xl bg-white/10 p-4">
                       <p className="text-sm font-black text-white">Suggested Skills</p>
-                      <p className="mt-2 text-sm text-slate-300">MongoDB indexing, interview DSA, GitHub portfolio, aptitude speed drills.</p>
+                      <p className="mt-2 text-sm text-slate-300">{(studentCareer.suggestedSkills || []).join(", ")}</p>
                     </div>
                   </div>
                 </div>
               </DashboardCard>
 
-              <DashboardCard className="bg-gradient-to-br from-white to-sky-50" delay={0.16}>
+              <DashboardCard id="assistant" className="bg-gradient-to-br from-white to-sky-50" delay={0.16}>
                 <SectionHeader icon={Bot} title="AI Doubt Assistant" action={<StatusBadge tone="indigo">Online</StatusBadge>} />
                 <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
                   <div className="flex items-center gap-3">
@@ -692,15 +1093,32 @@ export default function StudentDashboard() {
                   <div className="mt-4 flex gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
                     <input
                       type="text"
+                      value={assistantQuestion}
+                      onChange={(event) => setAssistantQuestion(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") askAssistant();
+                      }}
                       placeholder="Type your doubt here..."
                       className="min-w-0 flex-1 bg-transparent px-2 text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-400"
                     />
-                    <button type="button" className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-black text-white">Ask</button>
+                    <button
+                      type="button"
+                      onClick={() => askAssistant()}
+                      disabled={assistantLoading}
+                      className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {assistantLoading ? "Asking..." : "Ask"}
+                    </button>
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {promptChips.map((prompt) => (
-                    <button key={prompt} type="button" className="rounded-full bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:text-slate-950">
+                    <button
+                      key={prompt}
+                      type="button"
+                      onClick={() => askAssistant(prompt)}
+                      className="rounded-full bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:text-slate-950"
+                    >
                       {prompt}
                     </button>
                   ))}
@@ -708,14 +1126,23 @@ export default function StudentDashboard() {
                 <div className="mt-5">
                   <p className="mb-3 text-sm font-black text-slate-900">Latest AI conversations</p>
                   <div className="space-y-2">
-                    {aiConversations.map((conversation) => (
-                      <div key={conversation} className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-sm">
-                        {conversation}
+                    {conversations.slice(0, 3).map((conversation) => (
+                      <button
+                        key={conversation._id || conversation.question}
+                        type="button"
+                        onClick={() => setModal({ title: conversation.question, body: <p className="leading-7 text-slate-600">{conversation.answer}</p> })}
+                        className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left text-sm font-bold text-slate-600 shadow-sm"
+                      >
+                        {conversation.question}
                         <ChevronRight className="h-4 w-4 text-slate-300" />
-                      </div>
+                      </button>
                     ))}
                   </div>
-                  <button type="button" className="mt-4 w-full rounded-2xl bg-sky-600 px-4 py-3 text-sm font-black text-white transition hover:bg-sky-700">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById("assistant")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                    className="mt-4 w-full rounded-2xl bg-sky-600 px-4 py-3 text-sm font-black text-white transition hover:bg-sky-700"
+                  >
                     Open AI Assistant
                   </button>
                 </div>
@@ -723,7 +1150,7 @@ export default function StudentDashboard() {
             </div>
 
             <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <DashboardCard delay={0.18}>
+              <DashboardCard id="analytics" delay={0.18}>
                 <SectionHeader icon={TrendingUp} title="Performance Analytics" />
                 <div className="grid gap-5 lg:grid-cols-3">
                   <div className="rounded-2xl bg-slate-50 p-4 lg:col-span-1">
@@ -744,12 +1171,12 @@ export default function StudentDashboard() {
                     <p className="mb-3 text-sm font-black text-slate-900">Subject Comparison</p>
                     <div className="h-56">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={subjects}>
+                        <BarChart data={studentSubjects}>
                           <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
                           <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
                           <Tooltip />
                           <Bar dataKey="attendance" radius={[8, 8, 0, 0]}>
-                            {subjects.map((subject) => (
+                            {studentSubjects.map((subject) => (
                               <Cell key={subject.name} fill={subject.attendance >= 85 ? "#10b981" : subject.attendance >= 75 ? "#f59e0b" : "#ef4444"} />
                             ))}
                           </Bar>
@@ -792,7 +1219,7 @@ export default function StudentDashboard() {
                         <div className="min-w-0 flex-1 rounded-2xl bg-slate-50 p-3">
                           <p className="font-black capitalize text-slate-950">{record.status} attendance marked</p>
                           <p className="mt-1 text-sm font-medium text-slate-500">
-                            {record.date ? toShortDate(record.date) : "Recent"} · By {record.markedBy?.name || "Faculty"}
+                            {record.date ? toShortDate(record.date) : "Recent"} - By {record.markedBy?.name || "Faculty"}
                           </p>
                         </div>
                       </div>
@@ -815,11 +1242,11 @@ export default function StudentDashboard() {
               <SectionHeader icon={Target} title="Quick Actions" />
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 {[
-                  { label: "Download Attendance", icon: Download },
-                  { label: "View Timetable", icon: CalendarDays },
-                  { label: "Assignments", icon: FileBarChart },
-                  { label: "Study Planner", icon: Target },
-                  { label: "Campus Events", icon: Home },
+                  { label: "Download Attendance", icon: Download, action: downloadAttendance },
+                  { label: "View Timetable", icon: CalendarDays, action: () => scrollToSection("Timetable") },
+                  { label: "Assignments", icon: FileBarChart, action: () => scrollToSection("Assignments") },
+                  { label: "Study Planner", icon: Target, action: openStudyPlanner },
+                  { label: "Campus Events", icon: Home, action: openEvents },
                   { label: "Profile", icon: UserRound, action: () => navigate("/profile") },
                 ].map((action) => {
                   const Icon = action.icon;
