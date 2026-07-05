@@ -149,6 +149,71 @@ function makeAssistantAnswer(question, dashboard) {
   return "Here is a focused answer: revise the concept in small parts, write one example, test yourself with two questions, and ask your faculty or AI mentor for the weak step.";
 }
 
+async function askGemini(question, dashboard) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const dashboardContext = {
+    subjects: dashboard.subjects.map((subject) => ({
+      name: subject.name,
+      attendance: subject.attendance,
+      progress: subject.progress,
+    })),
+    pendingAssignments: dashboard.assignments
+      .filter((assignment) => assignment.status !== "Submitted")
+      .map((assignment) => ({
+        title: assignment.title,
+        due: assignment.due,
+        priority: assignment.priority,
+        status: assignment.status,
+      })),
+    timetable: dashboard.timetable,
+    career: {
+      placementReadinessScore: dashboard.career?.placementReadinessScore,
+      resumeStatus: dashboard.career?.resumeStatus,
+      suggestedSkills: dashboard.career?.suggestedSkills,
+    },
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: [
+                "You are CampusIQ AI, an academic doubt assistant for a college student.",
+                "Answer in simple, helpful Hinglish/English depending on the user's language.",
+                "Keep answers practical, concise, and study-focused.",
+                "Use the dashboard context only when relevant.",
+                `Dashboard context: ${JSON.stringify(dashboardContext)}`,
+                `Student question: ${question}`,
+              ].join("\n"),
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.65,
+        maxOutputTokens: 550,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Gemini API error ${response.status}: ${details}`);
+  }
+
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.map((part) => part.text).filter(Boolean).join("\n").trim() || null;
+}
+
 function buildStudyPlan(dashboard) {
   const weakestSubject = [...dashboard.subjects].sort((a, b) => (a.attendance || 0) - (b.attendance || 0))[0];
   const highPriority = dashboard.assignments.find((item) => item.priority === "High" && item.status !== "Submitted");
@@ -191,12 +256,25 @@ const askAssistant = async (req, res) => {
     }
 
     const dashboard = await ensureDashboard(req.user.id);
-    const answer = makeAssistantAnswer(question.trim(), dashboard);
+    let answer;
+    let source = "local";
+
+    try {
+      answer = await askGemini(question.trim(), dashboard);
+      if (answer) source = "gemini";
+    } catch (geminiError) {
+      console.error("Gemini assistant fallback:", geminiError.message);
+    }
+
+    if (!answer) {
+      answer = makeAssistantAnswer(question.trim(), dashboard);
+    }
+
     dashboard.conversations.unshift({ question: question.trim(), answer });
     dashboard.conversations = dashboard.conversations.slice(0, 12);
     await dashboard.save();
 
-    res.json({ question: question.trim(), answer, conversations: dashboard.conversations });
+    res.json({ question: question.trim(), answer, source, conversations: dashboard.conversations });
   } catch (err) {
     console.error("AI assistant error:", err.message);
     res.status(500).json({ error: "Failed to ask AI assistant" });

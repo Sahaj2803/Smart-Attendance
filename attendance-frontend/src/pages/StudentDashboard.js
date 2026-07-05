@@ -261,8 +261,15 @@ function TopNavbar({
               if (event.key === "Enter") onSearch();
             }}
             placeholder="Search attendance, assignments, subjects..."
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-24 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
           />
+          <button
+            type="button"
+            onClick={onSearch}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-800"
+          >
+            Search
+          </button>
         </div>
         <div className="relative hidden sm:block">
         <button
@@ -529,25 +536,42 @@ export default function StudentDashboard() {
   const handleSearch = () => {
     const text = searchTerm.trim().toLowerCase();
     if (!text) return;
-    const entries = [
-      ["attendance", "Attendance"],
-      ["subject", "Subjects"],
-      ["assignment", "Assignments"],
-      ["timetable", "Timetable"],
-      ["career", "AI Career Mentor"],
-      ["mentor", "AI Career Mentor"],
-      ["doubt", "AI Doubt Assistant"],
-      ["assistant", "AI Doubt Assistant"],
-      ["report", "Reports"],
-      ["analytics", "Reports"],
-      ["event", "events"],
-      ["planner", "planner"],
+
+    const normalize = (value) => String(value || "").toLowerCase();
+    const sectionEntries = [
+      { id: "Dashboard", terms: ["dashboard", "home", "welcome", "student"] },
+      { id: "Attendance", terms: ["attendance", "present", "absent", "percentage", "trend"] },
+      { id: "Subjects", terms: ["subject", "subjects", "teacher", "credits", ...studentSubjects.flatMap((subject) => [subject.name, subject.teacher])].map(normalize) },
+      { id: "Assignments", terms: ["assignment", "assignments", "pending", "due", "priority", ...studentAssignments.map((assignment) => assignment.title)].map(normalize) },
+      { id: "Timetable", terms: ["timetable", "schedule", "lecture", "class", "room", ...studentTimetable.flatMap((item) => [item.subject, item.faculty, item.room])].map(normalize) },
+      { id: "AI Career Mentor", terms: ["career", "mentor", "placement", "resume", "roadmap", "skills"] },
+      { id: "AI Doubt Assistant", terms: ["ai", "doubt", "assistant", "question", "ask", "gemini"] },
+      { id: "Reports", terms: ["report", "reports", "analytics", "performance", "chart", "comparison"] },
     ];
-    const match = entries.find(([keyword]) => text.includes(keyword));
-    if (match?.[1] === "events") openEvents();
-    else if (match?.[1] === "planner") openStudyPlanner();
-    else if (match) scrollToSection(match[1]);
-    else setNotice("No matching dashboard section found");
+
+    if (["event", "events", "campus event", "campus events"].some((term) => text.includes(term))) {
+      openEvents();
+      return;
+    }
+
+    if (["planner", "study planner", "study plan", "plan"].some((term) => text.includes(term))) {
+      openStudyPlanner();
+      return;
+    }
+
+    const match = sectionEntries.find((entry) =>
+      entry.terms.some((term) => {
+        const cleanTerm = normalize(term);
+        return cleanTerm.includes(text) || text.includes(cleanTerm);
+      })
+    );
+
+    if (match) {
+      scrollToSection(match.id);
+      setNotice(`Opened ${match.id}`);
+    } else {
+      setNotice("No matching dashboard section found");
+    }
   };
 
   const askAssistant = async (question = assistantQuestion) => {
@@ -563,6 +587,9 @@ export default function StudentDashboard() {
         title: "AI Assistant Answer",
         body: (
           <div className="space-y-4">
+            <StatusBadge tone={response.data.source === "gemini" ? "green" : "amber"}>
+              {response.data.source === "gemini" ? "Powered by Gemini" : "Local fallback answer"}
+            </StatusBadge>
             <div className="rounded-2xl bg-slate-50 p-4">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Question</p>
               <p className="mt-2 font-bold text-slate-900">{response.data.question}</p>
@@ -599,7 +626,7 @@ export default function StudentDashboard() {
   const openAssignment = async (assignment) => {
     try {
       if (assignment._id) {
-        const response = await API.patch(`/student-dashboard/assignments/${assignment._id}/status`, { status: "In Progress" });
+        const response = await API.put(`/student-dashboard/assignments/${assignment._id}/status`, { status: "In Progress" });
         mergeDashboard({ assignments: response.data.assignments });
       }
       setModal({
@@ -705,7 +732,7 @@ export default function StudentDashboard() {
 
   const updateDashboardSetting = async (key, value) => {
     try {
-      const response = await API.patch("/student-dashboard/settings", { [key]: value });
+      const response = await API.put("/student-dashboard/settings", { [key]: value });
       mergeDashboard({ settings: response.data.settings });
       if (key === "darkModeUi") setDarkModeUi(value);
     } catch (err) {
