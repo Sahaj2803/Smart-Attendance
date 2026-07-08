@@ -193,7 +193,7 @@ async function askGemini(question, dashboard) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const dashboardContext = {
     currentDate: new Intl.DateTimeFormat("en-IN", {
@@ -255,6 +255,7 @@ async function askGemini(question, dashboard) {
         temperature: 0.9,
         maxOutputTokens: 1024,
       },
+      tools: [{ google_search: {} }],
     }),
   });
 
