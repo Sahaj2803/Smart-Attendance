@@ -194,7 +194,7 @@ async function askGemini(question, dashboard) {
   if (!apiKey) return null;
 
   const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
   const dashboardContext = {
     currentDate: new Intl.DateTimeFormat("en-IN", {
       weekday: "long",
@@ -312,12 +312,14 @@ const askAssistant = async (req, res) => {
     const dashboard = await ensureDashboard(req.user.id);
     let answer;
     let source = "local";
+    let geminiDebug = null;
 
     try {
       answer = await askGemini(question.trim(), dashboard);
       if (answer) source = "gemini";
     } catch (geminiError) {
       console.error("Gemini assistant fallback:", geminiError.message);
+      geminiDebug = geminiError.message; // TEMPORARY: remove once fixed
     }
 
     if (!answer) {
@@ -328,7 +330,7 @@ const askAssistant = async (req, res) => {
     dashboard.conversations = dashboard.conversations.slice(0, 12);
     await dashboard.save();
 
-    res.json({ question: question.trim(), answer, source, conversations: dashboard.conversations });
+    res.json({ question: question.trim(), answer, source, geminiDebug, conversations: dashboard.conversations });
   } catch (err) {
     console.error("AI assistant error:", err.message);
     res.status(500).json({ error: "Failed to ask AI assistant" });

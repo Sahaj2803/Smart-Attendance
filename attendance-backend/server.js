@@ -1,8 +1,11 @@
+require('dotenv').config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
-require('dotenv').config();
+
+console.log("ENV CHECK - Gemini key present:", !!process.env.GEMINI_API_KEY);
+console.log("ENV CHECK - Gemini model:", process.env.GEMINI_MODEL);
 
 dotenv.config();
 const app = express();

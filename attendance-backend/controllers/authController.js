@@ -2,6 +2,8 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
+const jwtSecret = process.env.JWT_SECRET || "smart-attendance-secret-2026";
+
 // Login Controller
 const loginUser = async (req, res) => {
   const { email, password, role } = req.body;
@@ -21,7 +23,7 @@ const loginUser = async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, role: user.role, name: user.name },
-      process.env.JWT_SECRET,
+      jwtSecret,
       { expiresIn: "2h" }
     );
 
