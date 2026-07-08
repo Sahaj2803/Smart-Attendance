@@ -193,7 +193,7 @@ async function askGemini(question, dashboard) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const dashboardContext = {
     currentDate: new Intl.DateTimeFormat("en-IN", {
@@ -240,21 +240,20 @@ async function askGemini(question, dashboard) {
           parts: [
             {
               text: [
-                "You are CampusIQ AI, an academic doubt assistant for a college student.",
-                "Answer in simple, helpful Hinglish/English depending on the user's language.",
-                "Keep answers practical, concise, and study-focused.",
-                "If the user asks today's date or current time, answer from the provided currentDate/currentTime context.",
-                "Use the dashboard context only when relevant.",
-                `Dashboard context: ${JSON.stringify(dashboardContext)}`,
-                `Student question: ${question}`,
+                "Answer the user's question naturally and completely, like a normal AI assistant would — no restrictions on topic.",
+                "Reply in the same language/style the user writes in (Hinglish/English/etc).",
+                "If the user asks today's date or current time, use this context: " + `currentDate=${dashboardContext.currentDate}, currentTime=${dashboardContext.currentTime}`,
+                "You may optionally use this dashboard context if the question is about the student's subjects, attendance, assignments, timetable, or career/placement — otherwise ignore it completely:",
+                JSON.stringify(dashboardContext),
+                `Question: ${question}`,
               ].join("\n"),
             },
           ],
         },
       ],
       generationConfig: {
-        temperature: 0.65,
-        maxOutputTokens: 550,
+        temperature: 0.9,
+        maxOutputTokens: 1024,
       },
     }),
   });
