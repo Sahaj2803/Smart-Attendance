@@ -8,10 +8,12 @@ const {
   updateSettings,
   createStudyPlan,
   exportAttendance,
+  clearConversations,
 } = require("../controllers/studentDashboardController");
 
 router.get("/", protect, getDashboard);
 router.post("/assistant/ask", protect, askAssistant);
+router.delete("/assistant/conversations", protect, clearConversations);
 router.post("/study-plan", protect, createStudyPlan);
 router.patch("/assignments/:id/status", protect, updateAssignmentStatus);
 router.put("/assignments/:id/status", protect, updateAssignmentStatus);

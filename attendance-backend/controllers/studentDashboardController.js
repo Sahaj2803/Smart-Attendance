@@ -255,6 +255,7 @@ async function askGemini(question, dashboard) {
         temperature: 0.9,
         maxOutputTokens: 1024,
       },
+      // tools: [{ google_search: {} }], // TEMP: disabled to test if grounding was causing the 429
     }),
   });
 
@@ -395,6 +396,18 @@ const exportAttendance = async (req, res) => {
   }
 };
 
+const clearConversations = async (req, res) => {
+  try {
+    const dashboard = await ensureDashboard(req.user.id);
+    dashboard.conversations = [];
+    await dashboard.save();
+    res.json({ conversations: dashboard.conversations });
+  } catch (err) {
+    console.error("Clear conversations error:", err.message);
+    res.status(500).json({ error: "Failed to clear conversations" });
+  }
+};
+
 module.exports = {
   getDashboard,
   askAssistant,
@@ -402,4 +415,5 @@ module.exports = {
   updateSettings,
   createStudyPlan,
   exportAttendance,
+  clearConversations,
 };

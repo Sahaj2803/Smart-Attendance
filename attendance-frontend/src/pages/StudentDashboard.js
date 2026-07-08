@@ -574,6 +574,17 @@ export default function StudentDashboard() {
     }
   };
 
+  const clearConversations = async () => {
+    try {
+      const response = await API.delete("/student-dashboard/assistant/conversations");
+      mergeDashboard({ conversations: response.data.conversations });
+      setNotice("AI conversations cleared");
+    } catch (err) {
+      console.error("Clear conversations error:", err.message);
+      setNotice("Failed to clear AI conversations");
+    }
+  };
+
   const askAssistant = async (question = assistantQuestion) => {
     const cleanQuestion = question.trim();
     if (!cleanQuestion) return;
@@ -1167,10 +1178,11 @@ export default function StudentDashboard() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => document.getElementById("assistant")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                    className="mt-4 w-full rounded-2xl bg-sky-600 px-4 py-3 text-sm font-black text-white transition hover:bg-sky-700"
+                    onClick={clearConversations}
+                    disabled={!conversations.length}
+                    className="mt-4 w-full rounded-2xl bg-rose-600 px-4 py-3 text-sm font-black text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
-                    Open AI Assistant
+                    Delete Latest AI Conversations
                   </button>
                 </div>
               </DashboardCard>
