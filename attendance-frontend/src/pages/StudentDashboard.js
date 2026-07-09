@@ -800,7 +800,35 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_30%),radial-gradient(circle_at_top_right,#dcfce7,transparent_28%),linear-gradient(135deg,#f8fafc,#eef2ff_54%,#f0fdfa)] text-slate-950">
+    <div
+      className={`min-h-screen transition-colors duration-300 ${
+        darkModeUi
+          ? "dark-dashboard bg-[radial-gradient(circle_at_top_left,#1e293b,transparent_30%),radial-gradient(circle_at_top_right,#0f172a,transparent_28%),linear-gradient(135deg,#020617,#0f172a_54%,#0b1120)] text-slate-100"
+          : "bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_30%),radial-gradient(circle_at_top_right,#dcfce7,transparent_28%),linear-gradient(135deg,#f8fafc,#eef2ff_54%,#f0fdfa)] text-slate-950"
+      }`}
+    >
+      {darkModeUi && (
+        <style>{`
+          .dark-dashboard [class*="bg-white"] { background-color: #0f172a !important; }
+          .dark-dashboard [class*="bg-slate-50"] { background-color: #1e293b !important; }
+          .dark-dashboard [class*="bg-slate-100"] { background-color: #1e293b !important; }
+          .dark-dashboard [class*="border-white"] { border-color: #1e293b !important; }
+          .dark-dashboard [class*="border-slate-100"],
+          .dark-dashboard [class*="border-slate-200"] { border-color: #334155 !important; }
+          .dark-dashboard [class*="text-slate-950"],
+          .dark-dashboard [class*="text-slate-900"],
+          .dark-dashboard [class*="text-slate-800"] { color: #f1f5f9 !important; }
+          .dark-dashboard [class*="text-slate-700"],
+          .dark-dashboard [class*="text-slate-600"] { color: #cbd5e1 !important; }
+          .dark-dashboard [class*="text-slate-500"],
+          .dark-dashboard [class*="text-slate-400"] { color: #94a3b8 !important; }
+          .dark-dashboard [class*="bg-sky-50"],
+          .dark-dashboard [class*="bg-indigo-50"],
+          .dark-dashboard [class*="bg-emerald-50"],
+          .dark-dashboard [class*="bg-amber-50"],
+          .dark-dashboard [class*="bg-rose-50"] { background-color: #1e293b !important; }
+        `}</style>
+      )}
       {notice && (
         <div className="fixed right-4 top-4 z-[60] rounded-2xl bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-2xl shadow-slate-300">
           {notice}

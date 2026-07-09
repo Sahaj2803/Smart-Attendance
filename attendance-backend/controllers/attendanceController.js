@@ -3,13 +3,14 @@ const User = require("../models/User");
 
 // ✅ Faculty marks attendance
 const markAttendance = async (req, res) => {
-  const { studentId, status } = req.body;
+  const { studentId, status, subject } = req.body;
 
   try {
     const newRecord = new Attendance({
       student: studentId,
       markedBy: req.user.id,
       status,
+      subject: subject && subject.trim() ? subject.trim() : "General",
       date: new Date(),
     });
 
@@ -23,7 +24,14 @@ const markAttendance = async (req, res) => {
 
 const getStudentAttendance = async (req, res) => {
   try {
-    const records = await Attendance.find({ student: req.user.id })
+    const query = { student: req.user.id };
+
+    // Optional: /attendance/my?subject=Maths
+    if (req.query.subject) {
+      query.subject = req.query.subject;
+    }
+
+    const records = await Attendance.find(query)
       .populate("markedBy", "name email")
       .sort({ date: -1 });
 
@@ -41,6 +49,11 @@ const getAttendanceReport = async (req, res) => {
 
     if (role === "student") {
       query.student = id;
+    }
+
+    // Optional: /attendance/report?subject=Maths
+    if (req.query.subject) {
+      query.subject = req.query.subject;
     }
 
     const records = await Attendance.find(query)

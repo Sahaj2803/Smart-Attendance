@@ -27,6 +27,13 @@ export default function FacultyDashboard() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState("all"); // used to filter records/stats
+  const [markingSubject, setMarkingSubject] = useState(""); // subject chosen while marking attendance
+  const [showAddSubject, setShowAddSubject] = useState(false);
+  const [newSubjectName, setNewSubjectName] = useState("");
+  const [newSubjectCode, setNewSubjectCode] = useState("");
+  const [addingSubject, setAddingSubject] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,6 +56,28 @@ export default function FacultyDashboard() {
         
         setStudents(studentsResponse.data);
         setAttendance(attendanceResponse.data);
+
+        // Fetch subjects/courses for subject-wise attendance
+        // NOTE: adjust the endpoint below to match your backend route if different
+        try {
+          const subjectsResponse = await API.get("/subjects");
+          const subjectList = subjectsResponse.data || [];
+          setSubjects(subjectList);
+          if (subjectList.length > 0) {
+            setMarkingSubject(subjectList[0].name || subjectList[0]);
+          }
+        } catch (subjectErr) {
+          console.warn("Subjects endpoint not available, deriving subjects from attendance records instead.");
+          // Fallback: derive subject list from existing attendance records so the
+          // feature still works even if a dedicated /subjects API isn't set up yet
+          const derivedSubjects = [
+            ...new Set(attendanceResponse.data.map(a => a.subject).filter(Boolean))
+          ];
+          setSubjects(derivedSubjects.map(name => ({ name })));
+          if (derivedSubjects.length > 0) {
+            setMarkingSubject(derivedSubjects[0]);
+          }
+        }
       } catch (err) {
         console.error("Dashboard fetch error:", err);
         setError("Failed to load dashboard data");
@@ -78,8 +107,12 @@ export default function FacultyDashboard() {
   }, []);
 
   const mark = async (studentId, status) => {
+    if (!markingSubject) {
+      addNotification("Please select a subject before marking attendance", "error");
+      return;
+    }
     try {
-      await API.post("/attendance/mark", { studentId, status });
+      await API.post("/attendance/mark", { studentId, status, subject: markingSubject });
       // Refresh data after marking
       const [studentsResponse, attendanceResponse] = await Promise.all([
         API.get("/auth/students"),
@@ -89,7 +122,7 @@ export default function FacultyDashboard() {
       setAttendance(attendanceResponse.data);
       
       // Show notification
-      addNotification(`Attendance marked as ${status}`, "success");
+      addNotification(`Attendance marked as ${status} for ${markingSubject}`, "success");
     } catch (err) {
       console.error("Failed to mark attendance:", err);
       addNotification("Failed to mark attendance", "error");
@@ -97,9 +130,13 @@ export default function FacultyDashboard() {
   };
 
   const markAllPresent = async () => {
+    if (!markingSubject) {
+      addNotification("Please select a subject before marking attendance", "error");
+      return;
+    }
     try {
       const promises = students.map(student => 
-        API.post("/attendance/mark", { studentId: student._id, status: "present" })
+        API.post("/attendance/mark", { studentId: student._id, status: "present", subject: markingSubject })
       );
       await Promise.all(promises);
       
@@ -111,7 +148,7 @@ export default function FacultyDashboard() {
       setStudents(studentsResponse.data);
       setAttendance(attendanceResponse.data);
       
-      addNotification("All students marked present", "success");
+      addNotification(`All students marked present for ${markingSubject}`, "success");
     } catch (err) {
       console.error("Failed to mark all present:", err);
       addNotification("Failed to mark all present", "error");
@@ -119,9 +156,13 @@ export default function FacultyDashboard() {
   };
 
   const markAllAbsent = async () => {
+    if (!markingSubject) {
+      addNotification("Please select a subject before marking attendance", "error");
+      return;
+    }
     try {
       const promises = students.map(student => 
-        API.post("/attendance/mark", { studentId: student._id, status: "absent" })
+        API.post("/attendance/mark", { studentId: student._id, status: "absent", subject: markingSubject })
       );
       await Promise.all(promises);
       
@@ -133,10 +174,39 @@ export default function FacultyDashboard() {
       setStudents(studentsResponse.data);
       setAttendance(attendanceResponse.data);
       
-      addNotification("All students marked absent", "success");
+      addNotification(`All students marked absent for ${markingSubject}`, "success");
     } catch (err) {
       console.error("Failed to mark all absent:", err);
       addNotification("Failed to mark all absent", "error");
+    }
+  };
+
+  const addSubject = async () => {
+    if (!newSubjectName.trim()) {
+      addNotification("Subject name is required", "error");
+      return;
+    }
+
+    setAddingSubject(true);
+    try {
+      const response = await API.post("/subjects", {
+        name: newSubjectName.trim(),
+        code: newSubjectCode.trim() || undefined,
+      });
+
+      const created = response.data;
+      setSubjects(prev => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setMarkingSubject(created.name); // auto-select the newly created subject for marking
+      setNewSubjectName("");
+      setNewSubjectCode("");
+      setShowAddSubject(false);
+      addNotification(`Subject "${created.name}" added successfully`, "success");
+    } catch (err) {
+      console.error("Failed to add subject:", err);
+      const message = err.response?.data?.error || "Failed to add subject";
+      addNotification(message, "error");
+    } finally {
+      setAddingSubject(false);
     }
   };
 
@@ -176,29 +246,35 @@ export default function FacultyDashboard() {
     navigate("/profile");
   };
 
+  // Attendance records scoped to the currently selected subject (used across
+  // stats, filters and analytics). "all" keeps the previous, subject-agnostic behavior.
+  const subjectFilteredAttendance = selectedSubject === "all"
+    ? attendance
+    : attendance.filter(a => a.subject === selectedSubject);
+
   // Calculate statistics
   const stats = {
     totalStudents: students.length,
-    totalAttendance: attendance.length,
-    presentToday: attendance.filter(a => 
+    totalAttendance: subjectFilteredAttendance.length,
+    presentToday: subjectFilteredAttendance.filter(a => 
       new Date(a.date).toDateString() === new Date().toDateString() && 
       a.status === "present"
     ).length,
-    absentToday: attendance.filter(a => 
+    absentToday: subjectFilteredAttendance.filter(a => 
       new Date(a.date).toDateString() === new Date().toDateString() && 
       a.status === "absent"
     ).length
   };
 
-  // Filter students based on search and filter
+  // Filter students based on search, status filter and selected subject
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (filterStatus === "all") return matchesSearch;
     
-    // Check if student has attendance today
-    const todayAttendance = attendance.find(a => 
+    // Check if student has attendance today (within the selected subject, if any)
+    const todayAttendance = subjectFilteredAttendance.find(a => 
       a.student?._id === student._id && 
       new Date(a.date).toDateString() === new Date().toDateString()
     );
@@ -221,7 +297,7 @@ export default function FacultyDashboard() {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + index);
       
-      const dayAttendance = attendance.filter(a => {
+      const dayAttendance = subjectFilteredAttendance.filter(a => {
         if (!a.date) return false;
         const attendanceDate = new Date(a.date);
         return attendanceDate.toDateString() === date.toDateString();
@@ -246,12 +322,12 @@ export default function FacultyDashboard() {
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
     
-    const todayAttendance = attendance.filter(a => {
+    const todayAttendance = subjectFilteredAttendance.filter(a => {
       if (!a.date) return false;
       return new Date(a.date).toDateString() === today.toDateString();
     });
     
-    const yesterdayAttendance = attendance.filter(a => {
+    const yesterdayAttendance = subjectFilteredAttendance.filter(a => {
       if (!a.date) return false;
       return new Date(a.date).toDateString() === yesterday.toDateString();
     });
@@ -293,15 +369,36 @@ export default function FacultyDashboard() {
     };
   };
 
+  // Subject-wise attendance % breakdown, used to compare how a class is doing
+  // across different subjects/courses at a glance
+  const getSubjectBreakdown = () => {
+    const subjectNames = subjects.length > 0
+      ? subjects.map(s => s.name || s)
+      : [...new Set(attendance.map(a => a.subject).filter(Boolean))];
+
+    return subjectNames.map(name => {
+      const subjectRecords = attendance.filter(a => a.subject === name);
+      const present = subjectRecords.filter(a => a.status === "present").length;
+      const total = subjectRecords.length;
+      return {
+        subject: name,
+        present,
+        total,
+        percentage: total > 0 ? Math.round((present / total) * 100) : 0
+      };
+    }).sort((a, b) => b.percentage - a.percentage);
+  };
+
   const analyticsData = {
     attendanceDistribution: [
-      { name: "Present", value: attendance.filter(a => a.status === "present").length || 0, color: "#10b981" },
-      { name: "Absent", value: attendance.filter(a => a.status === "absent").length || 0, color: "#ef4444" }
+      { name: "Present", value: subjectFilteredAttendance.filter(a => a.status === "present").length || 0, color: "#10b981" },
+      { name: "Absent", value: subjectFilteredAttendance.filter(a => a.status === "absent").length || 0, color: "#ef4444" }
     ],
     weeklyTrend: getWeeklyTrend(),
     dailyUpdates: getDailyUpdates(),
+    subjectBreakdown: getSubjectBreakdown(),
     studentPerformance: students.map(student => {
-      const studentAttendance = attendance.filter(a => a.student?._id === student._id);
+      const studentAttendance = subjectFilteredAttendance.filter(a => a.student?._id === student._id);
       const presentCount = studentAttendance.filter(a => a.status === "present").length;
       const totalCount = studentAttendance.length;
       const percentage = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
@@ -773,12 +870,51 @@ export default function FacultyDashboard() {
               </div>
             </div>
 
+            {/* Subject-wise Breakdown */}
+            {analyticsData.subjectBreakdown.length > 0 && (
+              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
+                <h3 className={`text-xl font-bold mb-6 ${
+                  darkMode ? "text-slate-100" : "text-white"
+                }`}>
+                  📚 Subject-wise Attendance
+                </h3>
+                <div className="space-y-4">
+                  {analyticsData.subjectBreakdown.map((subj) => (
+                    <div key={subj.subject}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-sm font-semibold ${
+                          darkMode ? "text-slate-200" : "text-white"
+                        }`}>
+                          {subj.subject}
+                        </span>
+                        <span className={`text-sm font-bold ${
+                          subj.percentage >= 80 ? "text-green-600" :
+                          subj.percentage >= 60 ? "text-yellow-600" : "text-red-600"
+                        }`}>
+                          {subj.percentage}% ({subj.present}/{subj.total})
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2.5">
+                        <div
+                          className={`h-2.5 rounded-full ${
+                            subj.percentage >= 80 ? "bg-green-500" :
+                            subj.percentage >= 60 ? "bg-yellow-500" : "bg-red-500"
+                          }`}
+                          style={{ width: `${subj.percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Student Performance */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
               <h3 className={`text-xl font-bold mb-6 ${
                 darkMode ? "text-slate-100" : "text-white"
               }`}>
-                🏆 Student Performance Ranking
+                🏆 Student Performance Ranking {selectedSubject !== "all" && `— ${selectedSubject}`}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {analyticsData.studentPerformance.slice(0, 6).map((student, index) => (
@@ -861,7 +997,145 @@ export default function FacultyDashboard() {
                 <option value="absent">Absent Today</option>
                 <option value="not_marked">Not Marked</option>
               </select>
+
+              {/* Subject Filter - scopes stats, table and analytics to one subject */}
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                  darkMode 
+                    ? "bg-slate-700 border-slate-600 text-slate-100" 
+                    : "bg-white border-slate-300 text-slate-900"
+                }`}
+              >
+                <option value="all">All Subjects</option>
+                {subjects.map((subject) => {
+                  const name = subject.name || subject;
+                  return (
+                    <option key={name} value={name}>{name}</option>
+                  );
+                })}
+              </select>
             </div>
+
+            {/* Subject Selector - required before marking attendance */}
+            <div className="flex items-center gap-2">
+              <label className={`text-sm font-semibold whitespace-nowrap ${
+                darkMode ? "text-slate-300" : "text-white"
+              }`}>
+                📚 Subject:
+              </label>
+              <select
+                value={markingSubject}
+                onChange={(e) => setMarkingSubject(e.target.value)}
+                className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm ${
+                  darkMode 
+                    ? "bg-slate-700 border-slate-600 text-slate-100" 
+                    : "bg-white border-slate-300 text-slate-900"
+                }`}
+              >
+                {subjects.length === 0 && <option value="">No subjects available</option>}
+                {subjects.map((subject) => {
+                  const name = subject.name || subject;
+                  return (
+                    <option key={name} value={name}>{name}</option>
+                  );
+                })}
+              </select>
+              <button
+                onClick={() => setShowAddSubject(true)}
+                className="inline-flex items-center px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Subject
+              </button>
+            </div>
+
+            {/* Add Subject Modal */}
+            {showAddSubject && (
+              <div
+                className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+                onClick={() => setShowAddSubject(false)}
+              >
+                <div
+                  className={`w-full max-w-md rounded-2xl shadow-xl p-6 ${
+                    darkMode ? "bg-slate-800" : "bg-white"
+                  }`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className={`text-lg font-bold mb-4 ${
+                    darkMode ? "text-slate-100" : "text-gray-900"
+                  }`}>
+                    📚 Add New Subject
+                  </h3>
+
+                  <div className="mb-4">
+                    <label className={`block text-sm font-semibold mb-1 ${
+                      darkMode ? "text-slate-300" : "text-gray-700"
+                    }`}>
+                      Subject Name *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Mathematics"
+                      value={newSubjectName}
+                      onChange={(e) => setNewSubjectName(e.target.value)}
+                      autoFocus
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                        darkMode 
+                          ? "bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400" 
+                          : "bg-white border-slate-300 text-slate-900 placeholder-gray-400"
+                      }`}
+                    />
+                  </div>
+
+                  <div className="mb-6">
+                    <label className={`block text-sm font-semibold mb-1 ${
+                      darkMode ? "text-slate-300" : "text-gray-700"
+                    }`}>
+                      Subject Code (optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. MATH101"
+                      value={newSubjectCode}
+                      onChange={(e) => setNewSubjectCode(e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                        darkMode 
+                          ? "bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400" 
+                          : "bg-white border-slate-300 text-slate-900 placeholder-gray-400"
+                      }`}
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowAddSubject(false);
+                        setNewSubjectName("");
+                        setNewSubjectCode("");
+                      }}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors border ${
+                        darkMode
+                          ? "border-slate-600 text-slate-300 hover:bg-slate-700"
+                          : "border-slate-300 text-gray-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={addSubject}
+                      disabled={addingSubject}
+                      className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg font-medium transition-colors"
+                    >
+                      {addingSubject ? "Adding..." : "Add Subject"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Bulk Actions */}
             <div className="flex gap-2">
@@ -898,7 +1172,7 @@ export default function FacultyDashboard() {
             <p className={`text-sm font-medium mt-1 ${
               darkMode ? "text-slate-400" : "text-white"
             }`}>
-              Mark attendance and manage your students
+              Mark attendance and manage your students {markingSubject && `for ${markingSubject}`}
             </p>
           </div>
           
@@ -972,7 +1246,7 @@ export default function FacultyDashboard() {
         </div>
 
         {/* Recent Attendance Records */}
-        {attendance.length > 0 && (
+        {subjectFilteredAttendance.length > 0 && (
           <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
               <h3 className={`text-xl font-bold ${
@@ -1004,6 +1278,11 @@ export default function FacultyDashboard() {
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
                       darkMode ? "text-slate-300" : "text-white"
                     }`}>
+                      Subject
+                    </th>
+                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
+                      darkMode ? "text-slate-300" : "text-white"
+                    }`}>
                       Status
                     </th>
                     <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
@@ -1014,7 +1293,7 @@ export default function FacultyDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                  {attendance.slice(0, 10).map((record) => (
+                  {subjectFilteredAttendance.slice(0, 10).map((record) => (
                     <tr key={record._id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${
                         darkMode ? "text-slate-100" : "text-white"
@@ -1029,6 +1308,13 @@ export default function FacultyDashboard() {
                         darkMode ? "text-slate-400" : "text-white"
                       }`}>
                         {record.student?.name || "N/A"}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
+                        darkMode ? "text-slate-400" : "text-white"
+                      }`}>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400">
+                          {record.subject || "General"}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
