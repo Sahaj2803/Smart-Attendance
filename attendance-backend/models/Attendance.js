@@ -16,10 +16,16 @@ const AttendanceSchema = new mongoose.Schema({
     enum: ["present", "absent"],
     required: true,
   },
+
+  subject: {
+    type: String,
+    trim: true,
+    default: "General",
+  },
   date: {
     type: Date,
     default: Date.now,
   },
 });
 
-module.exports = mongoose.model("Attendance", AttendanceSchema);
+module.exports = mongoose.models.Attendance || mongoose.model("Attendance", AttendanceSchema);
