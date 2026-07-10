@@ -133,10 +133,21 @@ async function ensureDashboard(studentId) {
 }
 
 async function computeSubjectsWithAttendance(studentId) {
-  const [subjects, records] = await Promise.all([
+  const [subjects, records, facultyMembers] = await Promise.all([
     Subject.find().sort({ name: 1 }).populate("createdBy", "name"),
     Attendance.find({ student: studentId }),
+    User.find({ role: "faculty", "subjects.0": { $exists: true } }).select("name subjects"),
   ]);
+
+  // Build subjectId -> teacher name(s) mapping from faculty's selected subjects (multi-select feature)
+  const teacherNamesBySubjectId = {};
+  facultyMembers.forEach((faculty) => {
+    (faculty.subjects || []).forEach((subjectId) => {
+      const key = subjectId.toString();
+      if (!teacherNamesBySubjectId[key]) teacherNamesBySubjectId[key] = [];
+      if (faculty.name) teacherNamesBySubjectId[key].push(faculty.name);
+    });
+  });
 
   // Group attendance records by subject name
   const bySubjectMap = {};
@@ -151,11 +162,13 @@ async function computeSubjectsWithAttendance(studentId) {
   const subjectList = subjects.map((subject) => {
     const stat = bySubjectMap[subject.name] || { present: 0, total: 0 };
     const percentage = stat.total ? Math.round((stat.present / stat.total) * 100) : 0;
+    const mappedTeachers = teacherNamesBySubjectId[subject._id.toString()];
+    const teacherName = mappedTeachers?.length ? mappedTeachers.join(" & ") : subject.createdBy?.name || "Faculty";
     return {
       _id: subject._id,
       name: subject.name,
       code: subject.code || "",
-      teacher: subject.createdBy?.name || "Faculty",
+      teacher: teacherName,
       attendance: percentage,
       present: stat.present,
       total: stat.total,
