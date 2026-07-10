@@ -15,6 +15,9 @@ import {
   BookMarked,
   Loader2,
   AlertTriangle,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import API from "../api";
 
@@ -29,6 +32,11 @@ export default function ProfilePage() {
   const [selectedSubjectIds, setSelectedSubjectIds] = useState([]);
   const [savingSubjects, setSavingSubjects] = useState(false);
   const [subjectsNotice, setSubjectsNotice] = useState("");
+
+  // Editable name
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   const navigate = useNavigate();
 
@@ -108,6 +116,35 @@ export default function ProfilePage() {
     } finally {
       setSavingSubjects(false);
       setTimeout(() => setSubjectsNotice(""), 3000);
+    }
+  };
+
+  const startEditName = () => {
+    setNameDraft(user?.name || "");
+    setEditingName(true);
+  };
+
+  const cancelEditName = () => {
+    setEditingName(false);
+    setNameDraft("");
+  };
+
+  const saveName = async () => {
+    if (!nameDraft.trim()) return;
+    setSavingName(true);
+    try {
+      const response = await API.put("/auth/me", { name: nameDraft.trim() });
+      setUser(response.data);
+      const cachedKey = localStorage.getItem("userInfo") ? "userInfo" : "user";
+      const cached = JSON.parse(localStorage.getItem(cachedKey));
+      if (cached) {
+        localStorage.setItem(cachedKey, JSON.stringify({ ...cached, name: response.data.name }));
+      }
+      setEditingName(false);
+    } catch (err) {
+      console.error("Failed to update name", err);
+    } finally {
+      setSavingName(false);
     }
   };
 
@@ -200,8 +237,52 @@ export default function ProfilePage() {
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-2xl font-black shadow-inner backdrop-blur-sm ring-2 ring-white/30">
                       {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                     </div>
-                    <div>
-                      <h2 className="text-xl font-black">{user.name || "N/A"}</h2>
+                    <div className="min-w-0 flex-1">
+                      {editingName ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            autoFocus
+                            type="text"
+                            value={nameDraft}
+                            onChange={(e) => setNameDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveName();
+                              if (e.key === "Escape") cancelEditName();
+                            }}
+                            className="w-full min-w-0 rounded-lg bg-white/20 px-3 py-1.5 text-lg font-black text-white placeholder-white/50 outline-none ring-2 ring-white/40 backdrop-blur-sm"
+                            placeholder="Your name"
+                          />
+                          <button
+                            type="button"
+                            onClick={saveName}
+                            disabled={savingName}
+                            className="rounded-lg bg-white/25 p-1.5 text-white transition hover:bg-white/40 disabled:opacity-50"
+                            title="Save"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditName}
+                            className="rounded-lg bg-white/10 p-1.5 text-white transition hover:bg-white/20"
+                            title="Cancel"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <h2 className="truncate text-xl font-black">{user.name || "N/A"}</h2>
+                          <button
+                            type="button"
+                            onClick={startEditName}
+                            className="rounded-lg p-1 text-indigo-100 transition hover:bg-white/15 hover:text-white"
+                            title="Edit name"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
                       <p className="mt-0.5 flex items-center gap-1.5 text-sm font-semibold capitalize text-indigo-100">
                         <BadgeCheck className="h-4 w-4" />
                         {user.role || "User"}

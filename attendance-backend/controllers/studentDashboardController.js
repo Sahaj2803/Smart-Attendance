@@ -196,9 +196,45 @@ async function computeSubjectsWithAttendance(studentId) {
   return { subjects: subjectList, attendanceSummary, timetable };
 }
 
+function buildAssignmentsFromSubjects(subjects) {
+  if (!subjects.length) return defaultAssignments;
+
+  const seeds = [
+    { suffix: "Case Study", priority: "High", status: "Pending" },
+    { suffix: "Practical Assignment", priority: "Medium", status: "In Review" },
+    { suffix: "Concept Review", priority: "Low", status: "Draft" },
+    { suffix: "Lab Report", priority: "Medium", status: "In Progress" },
+  ];
+  const dueOptions = ["Today, 6:00 PM", "Tomorrow", "In 2 days", "This Friday", "Next Monday"];
+
+  return subjects.slice(0, 4).map((subject, index) => {
+    const seed = seeds[index % seeds.length];
+    return {
+      title: `${subject.name} ${seed.suffix}`,
+      subject: subject.name,
+      due: dueOptions[index % dueOptions.length],
+      priority: seed.priority,
+      status: seed.status,
+      description: `Complete the ${seed.suffix.toLowerCase()} for ${subject.name}, guided by ${subject.teacher || "your faculty"}.`,
+    };
+  });
+}
+
 async function getEnrichedDashboard(studentId) {
   const dashboard = await ensureDashboard(studentId);
   const { subjects, attendanceSummary, timetable } = await computeSubjectsWithAttendance(studentId);
+
+  // Self-heal: if real subjects exist but stored assignments don't reference any of
+  // them (still holding old generic seed data), regenerate assignments from real subjects.
+  if (subjects.length > 0) {
+    const subjectNames = new Set(subjects.map((s) => s.name));
+    const matchesRealSubject = dashboard.assignments.some((a) => subjectNames.has(a.subject));
+    if (!matchesRealSubject) {
+      dashboard.assignments = buildAssignmentsFromSubjects(subjects);
+      await dashboard.save();
+    }
+  }
+
   return { dashboard, subjects, attendanceSummary, timetable };
 }
 

@@ -4,7 +4,7 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { protect } = require("../middleware/authMiddleware");
-const { getCurrentUser, loginUser, updateFacultySubjects } = require("../controllers/authController");
+const { getCurrentUser, loginUser, updateFacultySubjects, updateProfile } = require("../controllers/authController");
 
 //  Middleware: Faculty check 
 const verifyFaculty = (req, res, next) => {
@@ -122,6 +122,9 @@ router.delete("/student/:id", protect, verifyFaculty, deleteStudent);
 
 //  GET: Get current user profile
 router.get("/me", protect, getCurrentUser);
+
+//  PUT: Update own profile (name, department, rollNo)
+router.put("/me", protect, updateProfile);
 
 //  PUT: Faculty selects multiple subjects they teach
 router.put("/faculty/subjects", protect, updateFacultySubjects);

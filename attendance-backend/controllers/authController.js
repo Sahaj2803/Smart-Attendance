@@ -104,9 +104,31 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+// Update own profile (name, department, rollNo)
+const updateProfile = async (req, res) => {
+  try {
+    const { name, department, rollNo } = req.body;
+    const updates = {};
+    if (typeof name === "string" && name.trim()) updates.name = name.trim();
+    if (typeof department === "string") updates.department = department.trim();
+    if (typeof rollNo === "string") updates.rollNo = rollNo.trim();
+
+    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true })
+      .select("-password")
+      .populate("subjects", "name code");
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
+  } catch (err) {
+    console.error("Update profile error:", err.message);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+};
+
 module.exports = {
   loginUser,
   getCurrentUser,
   deleteStudent,
   updateFacultySubjects,
+  updateProfile,
 };
