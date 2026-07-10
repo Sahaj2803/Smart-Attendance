@@ -59,6 +59,8 @@ import EmptyState from "../components/dashboard/EmptyState";
 import SkeletonCard from "../components/dashboard/SkeletonCard";
 import StatCard from "../components/dashboard/StatCard";
 
+console.log("API BASE:", process.env.REACT_APP_API_BASE);
+
 const sidebarItems = [
   { label: "Dashboard", icon: LayoutDashboard, active: true },
   { label: "Attendance", icon: ClipboardCheck },
@@ -626,8 +628,10 @@ export default function StudentDashboard() {
         <div className="space-y-4">
           <p className="leading-7 text-slate-600">{subject.notes || "No faculty notes are available for this subject yet."}</p>
           <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-            Teacher: <span className="font-bold text-slate-900">{subject.teacher}</span> - Credits:{" "}
-            <span className="font-bold text-slate-900">{subject.credits}</span>
+            Teacher: <span className="font-bold text-slate-900">{subject.teacher}</span> - Attendance:{" "}
+            <span className="font-bold text-slate-900">
+              {subject.attendance ?? 0}% ({subject.present ?? 0}/{subject.total ?? 0})
+            </span>
           </div>
         </div>
       ),
@@ -994,6 +998,27 @@ export default function StudentDashboard() {
                         </ResponsiveContainer>
                       </div>
                     </div>
+                    {Array.isArray(dashboardData?.attendanceSummary?.bySubject) && dashboardData.attendanceSummary.bySubject.length > 0 && (
+                      <div className="rounded-2xl bg-slate-50 p-4">
+                        <p className="mb-3 text-sm font-bold text-slate-600">Subject-wise attendance</p>
+                        <div className="space-y-3">
+                          {dashboardData.attendanceSummary.bySubject.map((item) => (
+                            <div key={item.subject}>
+                              <div className="mb-1 flex justify-between text-xs font-bold text-slate-500">
+                                <span>{item.subject}</span>
+                                <span>{item.percentage}% ({item.present}/{item.total})</span>
+                              </div>
+                              <div className="h-2 overflow-hidden rounded-full bg-white">
+                                <div
+                                  className={`h-full rounded-full ${item.percentage >= 75 ? "bg-emerald-500" : "bg-rose-500"}`}
+                                  style={{ width: `${item.percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </DashboardCard>
@@ -1041,7 +1066,9 @@ export default function StudentDashboard() {
                           <h3 className="font-black text-slate-950">{subject.name}</h3>
                           <p className="mt-1 text-sm font-medium text-slate-500">{subject.teacher}</p>
                         </div>
-                        <StatusBadge tone="indigo">{subject.credits} credits</StatusBadge>
+                        <StatusBadge tone="indigo">
+                          {subject.code ? subject.code : `${subject.present ?? 0}/${subject.total ?? 0} marked`}
+                        </StatusBadge>
                       </div>
                       <div className="mt-5">
                         <div className="mb-2 flex justify-between text-xs font-bold text-slate-500">

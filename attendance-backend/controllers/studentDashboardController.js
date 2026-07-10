@@ -1,5 +1,6 @@
 const StudentDashboard = require("../models/StudentDashboard");
 const Attendance = require("../models/Attendance");
+const Subject = require("../models/Subject");
 const User = require("../models/User");
 
 const defaultSubjects = [
@@ -128,7 +129,71 @@ async function ensureDashboard(studentId) {
   return dashboard;
 }
 
-function makeAssistantAnswer(question, dashboard) {
+async function computeSubjectsWithAttendance(studentId) {
+  const [subjects, records] = await Promise.all([
+    Subject.find().sort({ name: 1 }).populate("createdBy", "name"),
+    Attendance.find({ student: studentId }),
+  ]);
+
+  // Group attendance records by subject name
+  const bySubjectMap = {};
+  records.forEach((record) => {
+    const key = (record.subject || "General").trim();
+    if (!bySubjectMap[key]) bySubjectMap[key] = { present: 0, total: 0 };
+    bySubjectMap[key].total += 1;
+    if (record.status === "present") bySubjectMap[key].present += 1;
+  });
+
+  // Build subject list with computed attendance % from real subjects (faculty-added)
+  const subjectList = subjects.map((subject) => {
+    const stat = bySubjectMap[subject.name] || { present: 0, total: 0 };
+    const percentage = stat.total ? Math.round((stat.present / stat.total) * 100) : 0;
+    return {
+      _id: subject._id,
+      name: subject.name,
+      code: subject.code || "",
+      teacher: subject.createdBy?.name || "Faculty",
+      attendance: percentage,
+      present: stat.present,
+      total: stat.total,
+    };
+  });
+
+  // Overall attendance across all subjects
+  const overallTotal = records.length;
+  const overallPresent = records.filter((record) => record.status === "present").length;
+  const overallPercentage = overallTotal ? Math.round((overallPresent / overallTotal) * 100) : 0;
+
+  const attendanceSummary = {
+    overall: { present: overallPresent, total: overallTotal, percentage: overallPercentage },
+    bySubject: subjectList.map((subject) => ({
+      subject: subject.name,
+      present: subject.present,
+      total: subject.total,
+      percentage: subject.attendance,
+    })),
+  };
+
+  // Timetable built from real subjects. Subject model has no schedule fields yet,
+  // so time/room are placeholders — add schedule fields to the Subject model for real slots.
+  const timetable = subjectList.map((subject, index) => ({
+    time: "-",
+    subject: subject.name,
+    room: "-",
+    faculty: subject.teacher,
+    status: index === 0 ? "Current" : "Upcoming",
+  }));
+
+  return { subjects: subjectList, attendanceSummary, timetable };
+}
+
+async function getEnrichedDashboard(studentId) {
+  const dashboard = await ensureDashboard(studentId);
+  const { subjects, attendanceSummary, timetable } = await computeSubjectsWithAttendance(studentId);
+  return { dashboard, subjects, attendanceSummary, timetable };
+}
+
+function makeAssistantAnswer(question, dashboard, subjects, timetable) {
   const text = question.toLowerCase();
   const now = new Date();
   const formattedDate = new Intl.DateTimeFormat("en-IN", {
@@ -167,7 +232,7 @@ function makeAssistantAnswer(question, dashboard) {
   }
 
   if (text.includes("today") || text.includes("aaj")) {
-    return `Today is ${formattedDate}. Your current focus class is ${dashboard.timetable.find((item) => item.status === "Current")?.subject || "not marked right now"}.`;
+    return `Today is ${formattedDate}. Your current focus class is ${timetable.find((item) => item.status === "Current")?.subject || "not marked right now"}.`;
   }
 
   if (text.includes("attendance")) {
@@ -183,13 +248,13 @@ function makeAssistantAnswer(question, dashboard) {
     return `Your readiness score is ${dashboard.career.placementReadinessScore}. Focus next on ${dashboard.career.suggestedSkills.slice(0, 2).join(" and ")}.`;
   }
   if (text.includes("timetable") || text.includes("class")) {
-    const next = dashboard.timetable.find((item) => item.status === "Current") || dashboard.timetable.find((item) => item.status === "Upcoming");
+    const next = timetable.find((item) => item.status === "Current") || timetable.find((item) => item.status === "Upcoming");
     return next ? `Your focus class is ${next.subject} at ${next.time} in ${next.room} with ${next.faculty}.` : "No upcoming class is listed right now.";
   }
   return "Here is a focused answer: revise the concept in small parts, write one example, test yourself with two questions, and ask your faculty or AI mentor for the weak step.";
 }
 
-async function askGemini(question, dashboard) {
+async function askGemini(question, dashboard, subjects, timetable) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
@@ -209,7 +274,7 @@ async function askGemini(question, dashboard) {
       hour12: true,
       timeZone: "Asia/Kolkata",
     }).format(new Date()),
-    subjects: dashboard.subjects.map((subject) => ({
+    subjects: subjects.map((subject) => ({
       name: subject.name,
       attendance: subject.attendance,
       progress: subject.progress,
@@ -222,7 +287,7 @@ async function askGemini(question, dashboard) {
         priority: assignment.priority,
         status: assignment.status,
       })),
-    timetable: dashboard.timetable,
+    timetable: timetable,
     career: {
       placementReadinessScore: dashboard.career?.placementReadinessScore,
       resumeStatus: dashboard.career?.resumeStatus,
@@ -268,8 +333,8 @@ async function askGemini(question, dashboard) {
   return data.candidates?.[0]?.content?.parts?.map((part) => part.text).filter(Boolean).join("\n").trim() || null;
 }
 
-function buildStudyPlan(dashboard) {
-  const weakestSubject = [...dashboard.subjects].sort((a, b) => (a.attendance || 0) - (b.attendance || 0))[0];
+function buildStudyPlan(dashboard, subjects) {
+  const weakestSubject = [...subjects].sort((a, b) => (a.attendance || 0) - (b.attendance || 0))[0];
   const highPriority = dashboard.assignments.find((item) => item.priority === "High" && item.status !== "Submitted");
 
   return [
@@ -293,9 +358,15 @@ function buildStudyPlan(dashboard) {
 
 const getDashboard = async (req, res) => {
   try {
-    const dashboard = await ensureDashboard(req.user.id);
+    const { dashboard, subjects, timetable, attendanceSummary } = await getEnrichedDashboard(req.user.id);
     const user = await User.findById(req.user.id).select("-password");
-    res.json({ dashboard, user });
+
+    const dashboardObj = dashboard.toObject();
+    dashboardObj.subjects = subjects;
+    dashboardObj.timetable = timetable;
+    dashboardObj.attendanceSummary = attendanceSummary;
+
+    res.json({ dashboard: dashboardObj, user });
   } catch (err) {
     console.error("Student dashboard fetch error:", err.message);
     res.status(500).json({ error: "Failed to fetch student dashboard" });
@@ -309,13 +380,13 @@ const askAssistant = async (req, res) => {
       return res.status(400).json({ error: "Question is required" });
     }
 
-    const dashboard = await ensureDashboard(req.user.id);
+    const { dashboard, subjects, timetable } = await getEnrichedDashboard(req.user.id);
     let answer;
     let source = "local";
     let geminiDebug = null;
 
     try {
-      answer = await askGemini(question.trim(), dashboard);
+      answer = await askGemini(question.trim(), dashboard, subjects, timetable);
       if (answer) source = "gemini";
     } catch (geminiError) {
       console.error("Gemini assistant fallback:", geminiError.message);
@@ -323,7 +394,7 @@ const askAssistant = async (req, res) => {
     }
 
     if (!answer) {
-      answer = makeAssistantAnswer(question.trim(), dashboard);
+      answer = makeAssistantAnswer(question.trim(), dashboard, subjects, timetable);
     }
 
     dashboard.conversations.unshift({ question: question.trim(), answer });
@@ -368,8 +439,8 @@ const updateSettings = async (req, res) => {
 
 const createStudyPlan = async (req, res) => {
   try {
-    const dashboard = await ensureDashboard(req.user.id);
-    res.json({ plan: buildStudyPlan(dashboard) });
+    const { dashboard, subjects } = await getEnrichedDashboard(req.user.id);
+    res.json({ plan: buildStudyPlan(dashboard, subjects) });
   } catch (err) {
     console.error("Study plan error:", err.message);
     res.status(500).json({ error: "Failed to create study plan" });
@@ -382,9 +453,9 @@ const exportAttendance = async (req, res) => {
       .populate("markedBy", "name email")
       .sort({ date: -1 });
 
-    const rows = ["Date,Status,Marked By"];
+    const rows = ["Date,Subject,Status,Marked By"];
     records.forEach((record) => {
-      rows.push(`${record.date.toISOString()},${record.status},${record.markedBy?.name || "N/A"}`);
+      rows.push(`${record.date.toISOString()},${record.subject || "General"},${record.status},${record.markedBy?.name || "N/A"}`);
     });
 
     res.setHeader("Content-Type", "text/csv");
