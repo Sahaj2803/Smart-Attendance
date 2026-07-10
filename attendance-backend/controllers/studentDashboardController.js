@@ -41,6 +41,7 @@ const defaultSubjects = [
 const defaultAssignments = [
   {
     title: "DBMS ER Diagram Case Study",
+    subject: "Database Systems",
     due: "Today, 6:00 PM",
     priority: "High",
     status: "Pending",
@@ -48,6 +49,7 @@ const defaultAssignments = [
   },
   {
     title: "React Mini Project Review",
+    subject: "Web Engineering",
     due: "Tomorrow",
     priority: "Medium",
     status: "In Review",
@@ -55,6 +57,7 @@ const defaultAssignments = [
   },
   {
     title: "AI Ethics Reflection",
+    subject: "AI Fundamentals",
     due: "Jul 08",
     priority: "Low",
     status: "Draft",
@@ -175,11 +178,17 @@ async function computeSubjectsWithAttendance(studentId) {
   };
 
   // Timetable built from real subjects. Subject model has no schedule fields yet,
-  // so time/room are placeholders — add schedule fields to the Subject model for real slots.
+  // so time/room are randomly assigned for now — add schedule fields to the Subject
+  // model (day, time, room) later for a real fixed timetable.
+  const sampleTimes = ["09:00 AM", "10:30 AM", "12:15 PM", "02:00 PM", "03:30 PM"];
+  const sampleRooms = ["Lab 204", "C-112", "AI Studio", "B-308", "Seminar Hall A", "Room 501"];
+  const usedTimes = [...sampleTimes].sort(() => Math.random() - 0.5);
+  const usedRooms = [...sampleRooms].sort(() => Math.random() - 0.5);
+
   const timetable = subjectList.map((subject, index) => ({
-    time: "-",
+    time: usedTimes[index % usedTimes.length],
     subject: subject.name,
-    room: "-",
+    room: usedRooms[index % usedRooms.length],
     faculty: subject.teacher,
     status: index === 0 ? "Current" : "Upcoming",
   }));

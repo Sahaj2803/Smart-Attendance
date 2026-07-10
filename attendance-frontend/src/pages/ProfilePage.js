@@ -1,5 +1,21 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  LogOut,
+  Mail,
+  BadgeCheck,
+  Building2,
+  CalendarCheck2,
+  CheckCircle2,
+  XCircle,
+  Percent,
+  ClipboardList,
+  BookMarked,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 import API from "../api";
 
 export default function ProfilePage() {
@@ -7,6 +23,13 @@ export default function ProfilePage() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Faculty: multi-select subjects state
+  const [allSubjects, setAllSubjects] = useState([]);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState([]);
+  const [savingSubjects, setSavingSubjects] = useState(false);
+  const [subjectsNotice, setSubjectsNotice] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,31 +38,40 @@ export default function ProfilePage() {
         setLoading(true);
         setError(null);
 
-        // Get user info from localStorage (try both keys)
-        const userInfo = JSON.parse(localStorage.getItem("userInfo")) || JSON.parse(localStorage.getItem("user"));
-        if (userInfo) {
-          setUser(userInfo);
-        } else {
-          // If no user info, try to fetch from API
-          try {
-            const userResponse = await API.get("/auth/me");
-            setUser(userResponse.data);
-          } catch (userError) {
-            console.error("❌ Failed to load user profile", userError);
+        let resolvedUser = null;
+        try {
+          const userResponse = await API.get("/auth/me");
+          resolvedUser = userResponse.data;
+          setUser(resolvedUser);
+        } catch (userError) {
+          const cached = JSON.parse(localStorage.getItem("userInfo")) || JSON.parse(localStorage.getItem("user"));
+          if (cached) {
+            resolvedUser = cached;
+            setUser(cached);
+          } else {
+            console.error("Failed to load user profile", userError);
             setError("Failed to load user profile");
           }
         }
 
-        // Get attendance reports
         try {
           const reportsResponse = await API.get("/attendance/report");
           setReports(reportsResponse.data);
         } catch (reportsError) {
-          console.error("❌ Failed to load attendance reports", reportsError);
-          setError("Failed to load attendance reports");
+          console.error("Failed to load attendance reports", reportsError);
+        }
+
+        if (resolvedUser?.role === "faculty") {
+          try {
+            const subjectsResponse = await API.get("/subjects");
+            setAllSubjects(subjectsResponse.data || []);
+            setSelectedSubjectIds((resolvedUser.subjects || []).map((s) => (typeof s === "string" ? s : s._id)));
+          } catch (subjectsError) {
+            console.error("Failed to load subjects", subjectsError);
+          }
         }
       } catch (err) {
-        console.error("❌ Unexpected error:", err);
+        console.error("Unexpected error:", err);
         setError("An unexpected error occurred");
       } finally {
         setLoading(false);
@@ -49,26 +81,11 @@ export default function ProfilePage() {
     fetchData();
   }, []);
 
-  // Handle dark mode class on HTML element
-  useEffect(() => {
-    // Check if dark mode is enabled from localStorage or default to false
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
   const handleBack = () => {
-    const userRole = user?.role;
-    if (userRole === "student") {
-      navigate("/studentDashboard");
-    } else if (userRole === "faculty") {
-      navigate("/facultyDashboard");
-    } else {
-      navigate(-1);
-    }
+    const role = user?.role;
+    if (role === "student") navigate("/studentDashboard");
+    else if (role === "faculty") navigate("/facultyDashboard");
+    else navigate(-1);
   };
 
   const handleLogout = () => {
@@ -76,301 +93,293 @@ export default function ProfilePage() {
     window.location.href = "/login";
   };
 
-  // Calculate attendance summary
-  const attendanceSummary = {
-    total: reports.length,
-    present: reports.filter(r => r.status === "present").length,
-    absent: reports.filter(r => r.status === "absent").length,
-    percentage: reports.length > 0 ? Math.round((reports.filter(r => r.status === "present").length / reports.length) * 100) : 0
+  const toggleSubject = (id) => {
+    setSelectedSubjectIds((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
   };
 
-  // Loading State
+  const saveSubjects = async () => {
+    setSavingSubjects(true);
+    setSubjectsNotice("");
+    try {
+      const response = await API.put("/auth/faculty/subjects", { subjectIds: selectedSubjectIds });
+      setSubjectsNotice(`Saved ${response.data.subjects?.length || 0} subject(s)`);
+    } catch (err) {
+      setSubjectsNotice(err.response?.data?.error || "Failed to save subjects");
+    } finally {
+      setSavingSubjects(false);
+      setTimeout(() => setSubjectsNotice(""), 3000);
+    }
+  };
+
+  const attendanceSummary = {
+    total: reports.length,
+    present: reports.filter((r) => r.status === "present").length,
+    absent: reports.filter((r) => r.status === "absent").length,
+    percentage:
+      reports.length > 0
+        ? Math.round((reports.filter((r) => r.status === "present").length / reports.length) * 100)
+        : 0,
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-              <p className="text-lg font-medium text-slate-600 dark:text-slate-400">
-                Loading your profile...
-              </p>
-            </div>
-          </div>
+      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,#e0e7ff,transparent_35%),radial-gradient(circle_at_bottom_right,#dbeafe,transparent_35%),linear-gradient(135deg,#f8fafc,#eef2ff)]">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-indigo-600" />
+          <p className="mt-4 text-sm font-semibold text-slate-500">Loading your profile...</p>
         </div>
       </div>
     );
   }
 
-  // Error State
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                Error Loading Profile
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
+      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,#e0e7ff,transparent_35%),radial-gradient(circle_at_bottom_right,#fee2e2,transparent_35%),linear-gradient(135deg,#f8fafc,#eef2ff)]">
+        <div className="rounded-3xl border border-white/70 bg-white/80 p-10 text-center shadow-xl backdrop-blur-xl">
+          <AlertTriangle className="mx-auto h-10 w-10 text-rose-500" />
+          <h3 className="mt-4 text-lg font-black text-slate-900">Error loading profile</h3>
+          <p className="mt-2 text-sm text-slate-500">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-indigo-700"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
+  const isFaculty = user?.role === "faculty";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
-        {/* Professional Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0e7ff,transparent_35%),radial-gradient(circle_at_top_right,#dcfce7,transparent_30%),linear-gradient(135deg,#f8fafc,#eef2ff_55%,#f0fdfa)] pb-16">
+      <div className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 lg:px-8">
+        {/* Top bar */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
+        >
           <div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-              Student Profile
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 text-lg">
-              Comprehensive academic and attendance overview
-            </p>
+            <h1 className="text-3xl font-black tracking-tight text-slate-950 md:text-4xl">Profile</h1>
+            <p className="mt-1 text-sm font-medium text-slate-500">Your academic identity and attendance overview</p>
           </div>
-          
-          <div className="flex flex-wrap gap-3">
+          <div className="flex gap-3">
             <button
               onClick={handleBack}
-              className="inline-flex items-center px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm backdrop-blur-xl transition hover:bg-white"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </button>
             <button
               onClick={handleLogout}
-              className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-rose-200 transition hover:bg-rose-700"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              <LogOut className="h-4 w-4" />
               Logout
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Left Column - User Profile */}
-          <div className="xl:col-span-1">
+        <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+          {/* Left column */}
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.05 }}
+            className="xl:col-span-1 space-y-6"
+          >
             {user && (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                {/* Profile Header */}
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-2xl font-bold">
+              <div className="overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+                <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-500 to-sky-500 p-7 text-white">
+                  <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+                  <div className="relative flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-2xl font-black shadow-inner backdrop-blur-sm ring-2 ring-white/30">
                       {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold">{user.name || "N/A"}</h2>
-                      <p className="text-indigo-100 capitalize">
+                      <h2 className="text-xl font-black">{user.name || "N/A"}</h2>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-sm font-semibold capitalize text-indigo-100">
+                        <BadgeCheck className="h-4 w-4" />
                         {user.role || "User"}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Profile Details */}
-                <div className="p-6 space-y-6">
-                  <div className="space-y-4">
+                <div className="space-y-5 p-6">
+                  <div className="flex items-start gap-3">
+                    <Mail className="mt-0.5 h-4 w-4 text-slate-400" />
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                        Full Name
-                      </label>
-                      <p className="text-slate-900 dark:text-slate-100 font-medium">
-                        {user.name || "Not provided"}
-                      </p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Email</p>
+                      <p className="mt-0.5 break-all text-sm font-bold text-slate-900">{user.email || "Not provided"}</p>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                        Email Address
-                      </label>
-                      <p className="text-slate-900 dark:text-slate-100 font-medium break-all">
-                        {user.email || "Not provided"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                        Role
-                      </label>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400 capitalize">
-                        {user.role || "Not specified"}
-                      </span>
-                    </div>
-
-                    {user.department && (
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                          Department
-                        </label>
-                        <p className="text-slate-900 dark:text-slate-100 font-medium">
-                          {user.department}
-                        </p>
-                      </div>
-                    )}
                   </div>
+
+                  {user.department && (
+                    <div className="flex items-start gap-3">
+                      <Building2 className="mt-0.5 h-4 w-4 text-slate-400" />
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Department</p>
+                        <p className="mt-0.5 text-sm font-bold text-slate-900">{user.department}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {user.rollNo && (
+                    <div className="flex items-start gap-3">
+                      <ClipboardList className="mt-0.5 h-4 w-4 text-slate-400" />
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Roll No.</p>
+                        <p className="mt-0.5 text-sm font-bold text-slate-900">{user.rollNo}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Right Column - Attendance Data */}
-          <div className="xl:col-span-2 space-y-8">
-            {/* Attendance Summary Cards */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6">
-                📊 Attendance Overview
+            {/* Faculty: multi-select subjects */}
+            {isFaculty && (
+              <div className="rounded-[1.5rem] border border-white/70 bg-white/85 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+                <div className="mb-4 flex items-center gap-2">
+                  <BookMarked className="h-5 w-5 text-indigo-600" />
+                  <h3 className="text-sm font-black text-slate-900">My Subjects</h3>
+                </div>
+                <p className="mb-4 text-xs font-medium text-slate-500">
+                  Select all the subjects you teach. You can select multiple.
+                </p>
+
+                {allSubjects.length === 0 ? (
+                  <p className="rounded-xl bg-slate-50 p-4 text-sm font-medium text-slate-400">
+                    No subjects available yet. Add subjects from your dashboard first.
+                  </p>
+                ) : (
+                  <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                    {allSubjects.map((subject) => {
+                      const checked = selectedSubjectIds.includes(subject._id);
+                      return (
+                        <label
+                          key={subject._id}
+                          className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-sm font-bold transition ${
+                            checked
+                              ? "border-indigo-300 bg-indigo-50 text-indigo-900"
+                              : "border-slate-100 bg-slate-50/70 text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>
+                            {subject.name}
+                            {subject.code ? <span className="ml-1 font-medium text-slate-400">({subject.code})</span> : null}
+                          </span>
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 accent-indigo-600"
+                            checked={checked}
+                            onChange={() => toggleSubject(subject._id)}
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={saveSubjects}
+                  disabled={savingSubjects || allSubjects.length === 0}
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                >
+                  {savingSubjects ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {savingSubjects ? "Saving..." : "Save Subjects"}
+                </button>
+                {subjectsNotice && (
+                  <p className="mt-3 text-center text-xs font-bold text-indigo-600">{subjectsNotice}</p>
+                )}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Right column */}
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.1 }}
+            className="space-y-8 xl:col-span-2"
+          >
+            {/* Stat cards */}
+            <div className="rounded-[1.5rem] border border-white/70 bg-white/85 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <h3 className="mb-6 flex items-center gap-2 text-lg font-black text-slate-900">
+                <CalendarCheck2 className="h-5 w-5 text-indigo-600" />
+                Attendance Overview
               </h3>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Days</p>
-                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{attendanceSummary.total}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-xl border border-green-200 dark:border-green-800">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Present</p>
-                      <p className="text-2xl font-bold text-green-900 dark:text-green-100">{attendanceSummary.present}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {[
+                  { label: "Total Days", value: attendanceSummary.total, icon: ClipboardList, tone: "bg-sky-50 text-sky-700 border-sky-100" },
+                  { label: "Present", value: attendanceSummary.present, icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                  { label: "Absent", value: attendanceSummary.absent, icon: XCircle, tone: "bg-rose-50 text-rose-700 border-rose-100" },
+                  { label: "Percentage", value: `${attendanceSummary.percentage}%`, icon: Percent, tone: "bg-violet-50 text-violet-700 border-violet-100" },
+                ].map(({ label, value, icon: Icon, tone }) => (
+                  <div key={label} className={`rounded-2xl border p-5 ${tone}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide opacity-70">{label}</p>
+                        <p className="mt-1 text-2xl font-black">{value}</p>
+                      </div>
+                      <Icon className="h-6 w-6 opacity-60" />
                     </div>
                   </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-6 rounded-xl border border-red-200 dark:border-red-800">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-1">Absent</p>
-                      <p className="text-2xl font-bold text-red-900 dark:text-red-100">{attendanceSummary.absent}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-6 rounded-xl border border-purple-200 dark:border-purple-800">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Percentage</p>
-                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{attendanceSummary.percentage}%</p>
-                    </div>
-                    <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* Attendance Reports Table */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                  📋 Attendance Records
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  Detailed attendance history and records
-                </p>
+            {/* Reports table */}
+            <div className="overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <div className="border-b border-slate-100 px-6 py-5">
+                <h3 className="text-lg font-black text-slate-900">Attendance Records</h3>
+                <p className="mt-1 text-sm font-medium text-slate-500">Detailed attendance history</p>
               </div>
-              
+
               <div className="overflow-x-auto">
                 {reports.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                  <div className="py-16 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50">
+                      <ClipboardList className="h-6 w-6 text-slate-300" />
                     </div>
-                    <h4 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-                      No Records Found
-                    </h4>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      No attendance records available at the moment.
-                    </p>
+                    <h4 className="mt-4 text-sm font-black text-slate-900">No records found</h4>
+                    <p className="mt-1 text-sm font-medium text-slate-400">No attendance records available yet.</p>
                   </div>
                 ) : (
                   <table className="w-full">
-                    <thead className="bg-slate-50 dark:bg-slate-700">
+                    <thead className="bg-slate-50/80">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                          Student
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                          Marked By
-                        </th>
+                        {["Date", "Student", "Status", "Marked By"].map((h) => (
+                          <th key={h} className="px-6 py-3.5 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                            {h}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                      {reports.map((r, index) => (
-                        <tr key={r._id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
-                            {new Date(r.date).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
-                            })}
+                    <tbody className="divide-y divide-slate-100">
+                      {reports.map((r) => (
+                        <tr key={r._id} className="transition hover:bg-slate-50/70">
+                          <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900">
+                            {new Date(r.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                            {r.student?.name || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              r.status === "present" 
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" 
-                                : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
-                            }`}>
-                              <div className={`w-2 h-2 rounded-full mr-2 ${
-                                r.status === "present" ? "bg-green-500" : "bg-red-500"
-                              }`}></div>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-500">{r.student?.name || "N/A"}</td>
+                          <td className="whitespace-nowrap px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+                                r.status === "present" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                              }`}
+                            >
+                              <span className={`h-1.5 w-1.5 rounded-full ${r.status === "present" ? "bg-emerald-500" : "bg-rose-500"}`} />
                               {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                            {r.markedBy?.name || "N/A"}
-                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-500">{r.markedBy?.name || "N/A"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -378,7 +387,7 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

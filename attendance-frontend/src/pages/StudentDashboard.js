@@ -1108,6 +1108,9 @@ export default function StudentDashboard() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h3 className="font-black text-slate-950">{assignment.title}</h3>
+                          {assignment.subject && (
+                            <p className="mt-1 text-xs font-bold uppercase tracking-wide text-indigo-500">{assignment.subject}</p>
+                          )}
                           <p className="mt-1 text-sm font-semibold text-slate-500">Due {assignment.due}</p>
                         </div>
                         <StatusBadge tone={assignment.priority === "High" ? "rose" : assignment.priority === "Medium" ? "amber" : "green"}>

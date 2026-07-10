@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Subject = require("../models/Subject");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
@@ -45,7 +46,7 @@ const loginUser = async (req, res) => {
 // Get current user profile
 const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id).select('-password').populate('subjects', 'name code');
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -53,6 +54,35 @@ const getCurrentUser = async (req, res) => {
   } catch (err) {
     console.error("Get current user error:", err.message);
     res.status(500).json({ error: "Failed to get user profile" });
+  }
+};
+
+// Faculty: select/save multiple subjects they teach (multi-select)
+const updateFacultySubjects = async (req, res) => {
+  try {
+    if (req.user.role !== "faculty") {
+      return res.status(403).json({ error: "Only faculty can select subjects" });
+    }
+
+    const { subjectIds } = req.body;
+    if (!Array.isArray(subjectIds)) {
+      return res.status(400).json({ error: "subjectIds must be an array" });
+    }
+
+    // Validate that all provided IDs correspond to real subjects
+    const validSubjects = await Subject.find({ _id: { $in: subjectIds } }).select("_id");
+    const validIds = validSubjects.map((subject) => subject._id);
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { subjects: validIds },
+      { new: true }
+    ).select("-password").populate("subjects", "name code");
+
+    res.json({ subjects: user.subjects });
+  } catch (err) {
+    console.error("Update faculty subjects error:", err.message);
+    res.status(500).json({ error: "Failed to update subjects" });
   }
 };
 
@@ -78,5 +108,5 @@ module.exports = {
   loginUser,
   getCurrentUser,
   deleteStudent,
+  updateFacultySubjects,
 };
-

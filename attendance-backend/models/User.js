@@ -7,7 +7,8 @@ const userSchema = new mongoose.Schema({
     // Extra profile fields
     rollNo: { type: String, default: null },
     department: { type: String, default: null },
-    subject: { type: String, default: null }, // for faculty only
+    subject: { type: String, default: null }, // legacy single subject label (faculty)
+    subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }], // faculty: subjects they teach (multi-select)
     role: { type: String, enum: ["student", "faculty", "admin"], default: "student" }
 });
 
