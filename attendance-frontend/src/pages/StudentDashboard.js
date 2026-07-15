@@ -170,8 +170,8 @@ function Sidebar({ open, onClose, navigate, onLogout, onSectionNavigate }) {
             onClick={() => navigate("/studentDashboard")}
             className="flex items-center gap-3 rounded-2xl text-left"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-sky-500 to-emerald-400 text-white shadow-lg shadow-indigo-100">
-              <GraduationCap className="h-6 w-6" />
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white p-1.5 shadow-lg shadow-indigo-100 ring-1 ring-slate-100">
+              <img src="/campus-logo.png" alt="CampusIQ AI logo" className="h-full w-full rounded-xl object-cover" />
             </span>
             <span>
               <span className="block text-lg font-black text-slate-950">CampusIQ AI</span>
