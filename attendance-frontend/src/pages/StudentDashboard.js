@@ -34,7 +34,6 @@ import {
   Clock3,
   Download,
   FileBarChart,
-  GraduationCap,
   Home,
   LayoutDashboard,
   LogOut,
