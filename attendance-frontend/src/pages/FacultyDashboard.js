@@ -683,21 +683,15 @@ export default function FacultyDashboard() {
             <Sparkles className="h-4 w-4 text-amber-300" />
             AI Insights
           </h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {(() => {
               const bestDay = [...analyticsData.weeklyTrend].sort((a, b) => b.percentage - a.percentage)[0];
-              const weakestSubject = analyticsData.subjectBreakdown.length > 0 ? [...analyticsData.subjectBreakdown].sort((a, b) => a.percentage - b.percentage)[0] : null;
               const trend = analyticsData.dailyUpdates.changes.present;
               return [
                 {
                   text: bestDay && bestDay.total > 0
                     ? `Attendance peaks on ${bestDay.day} at ${bestDay.percentage}%.`
                     : "Not enough data yet to spot a peak day.",
-                },
-                {
-                  text: weakestSubject
-                    ? `${weakestSubject.subject} has the lowest attendance at ${weakestSubject.percentage}% — may need attention.`
-                    : "Add subjects to see subject-wise insights.",
                 },
                 {
                   text: `Present rate is ${trend >= 0 ? "up" : "down"} ${Math.abs(trend)}% compared to yesterday.`,
@@ -709,6 +703,30 @@ export default function FacultyDashboard() {
               </div>
             ))}
           </div>
+
+          {analyticsData.subjectBreakdown.length > 0 && (
+            <div className="mt-5">
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">Subjects overview</p>
+              <div className="space-y-3">
+                {analyticsData.subjectBreakdown.map((subj) => (
+                  <div key={subj.subject}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-300">{subj.subject}</span>
+                      <span className={`text-xs font-black ${subj.percentage >= 80 ? "text-emerald-300" : subj.percentage >= 60 ? "text-amber-300" : "text-rose-300"}`}>
+                        {subj.percentage}% ({subj.present}/{subj.total})
+                      </span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className={`h-full rounded-full ${subj.percentage >= 80 ? "bg-emerald-400" : subj.percentage >= 60 ? "bg-amber-400" : "bg-rose-400"}`}
+                        style={{ width: `${subj.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* Analytics */}
