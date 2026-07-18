@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import API from "../api";
-import DarkModeToggle from "../components/DarkModeToggle";
 import {
   PieChart,
   Pie,
@@ -13,14 +13,38 @@ import {
   Legend,
   ResponsiveContainer,
   LineChart,
-  Line
+  Line,
 } from "recharts";
+import {
+  LayoutDashboard,
+  Users,
+  CheckCircle2,
+  XCircle,
+  ClipboardList,
+  BarChart3,
+  Search,
+  Plus,
+  UserCircle,
+  LogOut,
+  BookOpen,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  Trophy,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  X,
+  Sun,
+  Moon,
+  Menu,
+  Sparkles,
+} from "lucide-react";
 
 export default function FacultyDashboard() {
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [user, setUser] = useState(null);
-  const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,13 +52,24 @@ export default function FacultyDashboard() {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [selectedSubject, setSelectedSubject] = useState("all"); // used to filter records/stats
-  const [markingSubject, setMarkingSubject] = useState(""); // subject chosen while marking attendance
+  const [selectedSubject, setSelectedSubject] = useState("all");
+  const [markingSubject, setMarkingSubject] = useState("");
   const [showAddSubject, setShowAddSubject] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState("");
   const [newSubjectCode, setNewSubjectCode] = useState("");
   const [addingSubject, setAddingSubject] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [lightMode, setLightMode] = useState(() => localStorage.getItem("facultyLightMode") === "true");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    localStorage.setItem("facultyLightMode", String(lightMode));
+  }, [lightMode]);
+
+  const scrollToSection = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setSidebarOpen(false);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,23 +77,19 @@ export default function FacultyDashboard() {
         setLoading(true);
         setError(null);
 
-        // Get user info
         const userInfo = JSON.parse(localStorage.getItem("userInfo")) || JSON.parse(localStorage.getItem("user"));
         if (userInfo) {
           setUser(userInfo);
         }
 
-        // Fetch students and attendance data
         const [studentsResponse, attendanceResponse] = await Promise.all([
           API.get("/auth/students"),
-          API.get("/attendance/report")
+          API.get("/attendance/report"),
         ]);
-        
+
         setStudents(studentsResponse.data);
         setAttendance(attendanceResponse.data);
 
-        // Fetch subjects/courses for subject-wise attendance
-        // NOTE: adjust the endpoint below to match your backend route if different
         try {
           const subjectsResponse = await API.get("/subjects");
           const subjectList = subjectsResponse.data || [];
@@ -68,12 +99,8 @@ export default function FacultyDashboard() {
           }
         } catch (subjectErr) {
           console.warn("Subjects endpoint not available, deriving subjects from attendance records instead.");
-          // Fallback: derive subject list from existing attendance records so the
-          // feature still works even if a dedicated /subjects API isn't set up yet
-          const derivedSubjects = [
-            ...new Set(attendanceResponse.data.map(a => a.subject).filter(Boolean))
-          ];
-          setSubjects(derivedSubjects.map(name => ({ name })));
+          const derivedSubjects = [...new Set(attendanceResponse.data.map((a) => a.subject).filter(Boolean))];
+          setSubjects(derivedSubjects.map((name) => ({ name })));
           if (derivedSubjects.length > 0) {
             setMarkingSubject(derivedSubjects[0]);
           }
@@ -89,22 +116,13 @@ export default function FacultyDashboard() {
     fetchData();
   }, []);
 
-  // Handle dark mode class on HTML element and localStorage
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('darkMode', 'true');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('darkMode', 'false');
-    }
-  }, [darkMode]);
-
-  // Initialize dark mode from localStorage
-  useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-    setDarkMode(savedDarkMode);
-  }, []);
+  const addNotification = (message, type) => {
+    const notification = { id: Date.now(), message, type, timestamp: new Date() };
+    setNotifications((prev) => [...prev, notification]);
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+    }, 3000);
+  };
 
   const mark = async (studentId, status) => {
     if (!markingSubject) {
@@ -113,15 +131,12 @@ export default function FacultyDashboard() {
     }
     try {
       await API.post("/attendance/mark", { studentId, status, subject: markingSubject });
-      // Refresh data after marking
       const [studentsResponse, attendanceResponse] = await Promise.all([
         API.get("/auth/students"),
-        API.get("/attendance/report")
+        API.get("/attendance/report"),
       ]);
       setStudents(studentsResponse.data);
       setAttendance(attendanceResponse.data);
-      
-      // Show notification
       addNotification(`Attendance marked as ${status} for ${markingSubject}`, "success");
     } catch (err) {
       console.error("Failed to mark attendance:", err);
@@ -135,19 +150,16 @@ export default function FacultyDashboard() {
       return;
     }
     try {
-      const promises = students.map(student => 
+      const promises = students.map((student) =>
         API.post("/attendance/mark", { studentId: student._id, status: "present", subject: markingSubject })
       );
       await Promise.all(promises);
-      
-      // Refresh data
       const [studentsResponse, attendanceResponse] = await Promise.all([
         API.get("/auth/students"),
-        API.get("/attendance/report")
+        API.get("/attendance/report"),
       ]);
       setStudents(studentsResponse.data);
       setAttendance(attendanceResponse.data);
-      
       addNotification(`All students marked present for ${markingSubject}`, "success");
     } catch (err) {
       console.error("Failed to mark all present:", err);
@@ -161,19 +173,16 @@ export default function FacultyDashboard() {
       return;
     }
     try {
-      const promises = students.map(student => 
+      const promises = students.map((student) =>
         API.post("/attendance/mark", { studentId: student._id, status: "absent", subject: markingSubject })
       );
       await Promise.all(promises);
-      
-      // Refresh data
       const [studentsResponse, attendanceResponse] = await Promise.all([
         API.get("/auth/students"),
-        API.get("/attendance/report")
+        API.get("/attendance/report"),
       ]);
       setStudents(studentsResponse.data);
       setAttendance(attendanceResponse.data);
-      
       addNotification(`All students marked absent for ${markingSubject}`, "success");
     } catch (err) {
       console.error("Failed to mark all absent:", err);
@@ -195,8 +204,8 @@ export default function FacultyDashboard() {
       });
 
       const created = response.data;
-      setSubjects(prev => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
-      setMarkingSubject(created.name); // auto-select the newly created subject for marking
+      setSubjects((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setMarkingSubject(created.name);
       setNewSubjectName("");
       setNewSubjectCode("");
       setShowAddSubject(false);
@@ -210,26 +219,11 @@ export default function FacultyDashboard() {
     }
   };
 
-  const addNotification = (message, type) => {
-    const notification = {
-      id: Date.now(),
-      message,
-      type,
-      timestamp: new Date()
-    };
-    setNotifications(prev => [...prev, notification]);
-    
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== notification.id));
-    }, 3000);
-  };
-
   const deleteStudent = async (id) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
       try {
         await API.delete(`/auth/student/${id}`);
-        setStudents(students.filter(s => s._id !== id));
+        setStudents(students.filter((s) => s._id !== id));
       } catch (err) {
         console.error("Failed to delete student:", err);
         alert("Failed to delete student");
@@ -246,73 +240,63 @@ export default function FacultyDashboard() {
     navigate("/profile");
   };
 
-  // Attendance records scoped to the currently selected subject (used across
-  // stats, filters and analytics). "all" keeps the previous, subject-agnostic behavior.
-  const subjectFilteredAttendance = selectedSubject === "all"
-    ? attendance
-    : attendance.filter(a => a.subject === selectedSubject);
+  const subjectFilteredAttendance =
+    selectedSubject === "all" ? attendance : attendance.filter((a) => a.subject === selectedSubject);
 
-  // Calculate statistics
   const stats = {
     totalStudents: students.length,
     totalAttendance: subjectFilteredAttendance.length,
-    presentToday: subjectFilteredAttendance.filter(a => 
-      new Date(a.date).toDateString() === new Date().toDateString() && 
-      a.status === "present"
+    presentToday: subjectFilteredAttendance.filter(
+      (a) => new Date(a.date).toDateString() === new Date().toDateString() && a.status === "present"
     ).length,
-    absentToday: subjectFilteredAttendance.filter(a => 
-      new Date(a.date).toDateString() === new Date().toDateString() && 
-      a.status === "absent"
-    ).length
+    absentToday: subjectFilteredAttendance.filter(
+      (a) => new Date(a.date).toDateString() === new Date().toDateString() && a.status === "absent"
+    ).length,
   };
 
-  // Filter students based on search, status filter and selected subject
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
+  const filteredStudents = students.filter((student) => {
+    const matchesSearch =
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase());
+
     if (filterStatus === "all") return matchesSearch;
-    
-    // Check if student has attendance today (within the selected subject, if any)
-    const todayAttendance = subjectFilteredAttendance.find(a => 
-      a.student?._id === student._id && 
-      new Date(a.date).toDateString() === new Date().toDateString()
+
+    const todayAttendance = subjectFilteredAttendance.find(
+      (a) => a.student?._id === student._id && new Date(a.date).toDateString() === new Date().toDateString()
     );
-    
+
     if (filterStatus === "present") return matchesSearch && todayAttendance?.status === "present";
     if (filterStatus === "absent") return matchesSearch && todayAttendance?.status === "absent";
     if (filterStatus === "not_marked") return matchesSearch && !todayAttendance;
-    
+
     return matchesSearch;
   });
 
-  // Enhanced Analytics Data with Real Calculations
   const getWeeklyTrend = () => {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const today = new Date();
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
-    
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+
     return days.map((day, index) => {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + index);
-      
-      const dayAttendance = subjectFilteredAttendance.filter(a => {
+
+      const dayAttendance = subjectFilteredAttendance.filter((a) => {
         if (!a.date) return false;
-        const attendanceDate = new Date(a.date);
-        return attendanceDate.toDateString() === date.toDateString();
+        return new Date(a.date).toDateString() === date.toDateString();
       });
-      
-      const present = dayAttendance.filter(a => a.status === "present").length;
-      const absent = dayAttendance.filter(a => a.status === "absent").length;
+
+      const present = dayAttendance.filter((a) => a.status === "present").length;
+      const absent = dayAttendance.filter((a) => a.status === "absent").length;
       const total = present + absent;
-      
+
       return {
         day,
         present: present || 0,
         absent: absent || 0,
         total: total || 0,
-        percentage: total > 0 ? Math.round((present / total) * 100) : 0
+        percentage: total > 0 ? Math.round((present / total) * 100) : 0,
       };
     });
   };
@@ -321,152 +305,221 @@ export default function FacultyDashboard() {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
-    
-    const todayAttendance = subjectFilteredAttendance.filter(a => {
+
+    const todayAttendance = subjectFilteredAttendance.filter((a) => {
       if (!a.date) return false;
       return new Date(a.date).toDateString() === today.toDateString();
     });
-    
-    const yesterdayAttendance = subjectFilteredAttendance.filter(a => {
+
+    const yesterdayAttendance = subjectFilteredAttendance.filter((a) => {
       if (!a.date) return false;
       return new Date(a.date).toDateString() === yesterday.toDateString();
     });
-    
-    const todayPresent = todayAttendance.filter(a => a.status === "present").length;
-    const todayAbsent = todayAttendance.filter(a => a.status === "absent").length;
-    const yesterdayPresent = yesterdayAttendance.filter(a => a.status === "present").length;
-    const yesterdayAbsent = yesterdayAttendance.filter(a => a.status === "absent").length;
-    
+
+    const todayPresent = todayAttendance.filter((a) => a.status === "present").length;
+    const todayAbsent = todayAttendance.filter((a) => a.status === "absent").length;
+    const yesterdayPresent = yesterdayAttendance.filter((a) => a.status === "present").length;
+    const yesterdayAbsent = yesterdayAttendance.filter((a) => a.status === "absent").length;
+
     const todayTotal = todayPresent + todayAbsent;
     const yesterdayTotal = yesterdayPresent + yesterdayAbsent;
-    
-    const presentChange = yesterdayPresent > 0 ? 
-      Math.round(((todayPresent - yesterdayPresent) / yesterdayPresent) * 100) : 
-      todayPresent > 0 ? 100 : 0;
-    const absentChange = yesterdayAbsent > 0 ? 
-      Math.round(((todayAbsent - yesterdayAbsent) / yesterdayAbsent) * 100) : 
-      todayAbsent > 0 ? 100 : 0;
-    
+
+    const presentChange =
+      yesterdayPresent > 0
+        ? Math.round(((todayPresent - yesterdayPresent) / yesterdayPresent) * 100)
+        : todayPresent > 0
+        ? 100
+        : 0;
+    const absentChange =
+      yesterdayAbsent > 0
+        ? Math.round(((todayAbsent - yesterdayAbsent) / yesterdayAbsent) * 100)
+        : todayAbsent > 0
+        ? 100
+        : 0;
+
     return {
       today: {
         present: todayPresent || 0,
         absent: todayAbsent || 0,
         total: todayTotal || 0,
-        percentage: todayTotal > 0 ? 
-          Math.round((todayPresent / todayTotal) * 100) : 0
+        percentage: todayTotal > 0 ? Math.round((todayPresent / todayTotal) * 100) : 0,
       },
       yesterday: {
         present: yesterdayPresent || 0,
         absent: yesterdayAbsent || 0,
         total: yesterdayTotal || 0,
-        percentage: yesterdayTotal > 0 ? 
-          Math.round((yesterdayPresent / yesterdayTotal) * 100) : 0
+        percentage: yesterdayTotal > 0 ? Math.round((yesterdayPresent / yesterdayTotal) * 100) : 0,
       },
-      changes: {
-        present: presentChange || 0,
-        absent: absentChange || 0
-      }
+      changes: { present: presentChange || 0, absent: absentChange || 0 },
     };
   };
 
-  // Subject-wise attendance % breakdown, used to compare how a class is doing
-  // across different subjects/courses at a glance
   const getSubjectBreakdown = () => {
-    const subjectNames = subjects.length > 0
-      ? subjects.map(s => s.name || s)
-      : [...new Set(attendance.map(a => a.subject).filter(Boolean))];
+    const subjectNames =
+      subjects.length > 0 ? subjects.map((s) => s.name || s) : [...new Set(attendance.map((a) => a.subject).filter(Boolean))];
 
-    return subjectNames.map(name => {
-      const subjectRecords = attendance.filter(a => a.subject === name);
-      const present = subjectRecords.filter(a => a.status === "present").length;
-      const total = subjectRecords.length;
-      return {
-        subject: name,
-        present,
-        total,
-        percentage: total > 0 ? Math.round((present / total) * 100) : 0
-      };
-    }).sort((a, b) => b.percentage - a.percentage);
+    return subjectNames
+      .map((name) => {
+        const subjectRecords = attendance.filter((a) => a.subject === name);
+        const present = subjectRecords.filter((a) => a.status === "present").length;
+        const total = subjectRecords.length;
+        return { subject: name, present, total, percentage: total > 0 ? Math.round((present / total) * 100) : 0 };
+      })
+      .sort((a, b) => b.percentage - a.percentage);
   };
 
   const analyticsData = {
     attendanceDistribution: [
-      { name: "Present", value: subjectFilteredAttendance.filter(a => a.status === "present").length || 0, color: "#10b981" },
-      { name: "Absent", value: subjectFilteredAttendance.filter(a => a.status === "absent").length || 0, color: "#ef4444" }
+      { name: "Present", value: subjectFilteredAttendance.filter((a) => a.status === "present").length || 0, color: "#34d399" },
+      { name: "Absent", value: subjectFilteredAttendance.filter((a) => a.status === "absent").length || 0, color: "#fb7185" },
     ],
     weeklyTrend: getWeeklyTrend(),
     dailyUpdates: getDailyUpdates(),
     subjectBreakdown: getSubjectBreakdown(),
-    studentPerformance: students.map(student => {
-      const studentAttendance = subjectFilteredAttendance.filter(a => a.student?._id === student._id);
-      const presentCount = studentAttendance.filter(a => a.status === "present").length;
-      const totalCount = studentAttendance.length;
-      const percentage = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
-      
-      return {
-        name: student.name || "Unknown Student",
-        attendance: percentage || 0,
-        present: presentCount || 0,
-        total: totalCount || 0
-      };
-    }).sort((a, b) => b.attendance - a.attendance)
+    studentPerformance: students
+      .map((student) => {
+        const studentAttendance = subjectFilteredAttendance.filter((a) => a.student?._id === student._id);
+        const presentCount = studentAttendance.filter((a) => a.status === "present").length;
+        const totalCount = studentAttendance.length;
+        const percentage = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+        return { name: student.name || "Unknown Student", attendance: percentage || 0, present: presentCount || 0, total: totalCount || 0 };
+      })
+      .sort((a, b) => b.attendance - a.attendance),
   };
 
-  // Loading State
+  const bgShell = lightMode
+    ? "relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,#e0e7ff,transparent_35%),radial-gradient(circle_at_top_right,#dcfce7,transparent_30%),linear-gradient(135deg,#f8fafc,#eef2ff_55%,#f0fdfa)] text-slate-900"
+    : "relative min-h-screen overflow-hidden bg-[#05060a] text-white";
+  const glassCard = lightMode
+    ? "rounded-3xl border border-slate-200 bg-white/85 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl"
+    : "rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl";
+
+  const AmbientBackground = () => (
+    <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <motion.div
+        className={`absolute -top-40 -left-32 h-[28rem] w-[28rem] rounded-full blur-[120px] ${lightMode ? "bg-indigo-300/30" : "bg-indigo-600/20"}`}
+        animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
+        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className={`absolute top-1/3 -right-32 h-[26rem] w-[26rem] rounded-full blur-[120px] ${lightMode ? "bg-emerald-300/25" : "bg-emerald-500/15"}`}
+        animate={{ x: [0, -30, 0], y: [0, 40, 0] }}
+        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {!lightMode && (
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_10%,black,transparent)]" />
+      )}
+    </div>
+  );
+
+  const navItems = [
+    { label: "Dashboard", icon: LayoutDashboard, action: () => window.scrollTo({ top: 0, behavior: "smooth" }) },
+    { label: "Students", icon: Users, action: () => scrollToSection("students") },
+    { label: "Subjects", icon: BookOpen, action: () => scrollToSection("subjects") },
+    { label: "Attendance", icon: ClipboardList, action: () => scrollToSection("attendance-records") },
+    { label: "Analytics", icon: BarChart3, action: () => { if (!showAnalytics) setShowAnalytics(true); setTimeout(() => scrollToSection("analytics"), 100); } },
+    { label: "Profile", icon: UserCircle, action: () => navigate("/profile") },
+  ];
+
+  const FacultySidebar = () => (
+    <>
+      <div
+        className={`fixed inset-0 z-30 bg-slate-950/50 backdrop-blur-sm transition lg:hidden ${
+          sidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
+      <aside
+        className={`fixed left-0 top-0 z-40 flex h-screen w-72 flex-col border-r px-4 py-5 backdrop-blur-xl transition-transform duration-300 lg:sticky lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } ${lightMode ? "border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/80" : "border-white/10 bg-[#0a0b10]/95 shadow-2xl shadow-black/40"}`}
+      >
+        <div className="flex items-center justify-between">
+          <button type="button" onClick={() => navigate("/facultyDashboard")} className="flex items-center gap-3 rounded-2xl text-left">
+            <span className={`flex h-11 w-11 items-center justify-center rounded-2xl p-1.5 shadow-lg ring-1 ${lightMode ? "bg-white ring-slate-100 shadow-indigo-100" : "bg-white/10 ring-white/15 shadow-[0_0_20px_rgba(129,140,248,0.35)]"}`}>
+              <img src="/campus-logo.png" alt="CampusIQ AI logo" className="h-full w-full rounded-xl object-cover" />
+            </span>
+            <span>
+              <span className={`block text-lg font-black ${lightMode ? "text-slate-950" : "text-white"}`}>CampusIQ AI</span>
+              <span className={`block text-xs font-semibold uppercase tracking-[0.18em] ${lightMode ? "text-slate-400" : "text-slate-500"}`}>Faculty hub</span>
+            </span>
+          </button>
+          <button type="button" onClick={() => setSidebarOpen(false)} className={`rounded-xl p-2 lg:hidden ${lightMode ? "text-slate-400 hover:bg-slate-100" : "text-slate-400 hover:bg-white/10"}`}>
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="mt-8 flex-1 space-y-1.5">
+          {navItems.map((item, index) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.action}
+              className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                index === 0
+                  ? lightMode
+                    ? "bg-slate-950 text-white shadow-lg shadow-slate-200"
+                    : "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg"
+                  : lightMode
+                  ? "text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+                  : "text-slate-400 hover:bg-white/[0.06] hover:text-white"
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className={`rounded-[1.15rem] border p-4 ${lightMode ? "border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-emerald-50" : "border-white/10 bg-gradient-to-br from-indigo-500/10 via-white/[0.02] to-emerald-500/10"}`}>
+          <div className="flex items-center gap-3">
+            <Sparkles className={`h-5 w-5 ${lightMode ? "text-indigo-500" : "text-indigo-300"}`} />
+            <p className={`text-sm font-bold ${lightMode ? "text-slate-900" : "text-white"}`}>AI Insights ready</p>
+          </div>
+          <p className={`mt-2 text-xs leading-5 ${lightMode ? "text-slate-500" : "text-slate-400"}`}>Attendance patterns and subject-wise trends, auto-generated.</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className={`mt-4 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${lightMode ? "text-rose-600 hover:bg-rose-50" : "text-rose-400 hover:bg-rose-500/10"}`}
+        >
+          <LogOut className="h-5 w-5" />
+          Logout
+        </button>
+      </aside>
+    </>
+  );
+
   if (loading) {
     return (
-      <div className={`min-h-screen transition-colors duration-500 ${
-        darkMode 
-          ? "bg-gradient-to-br from-slate-900 to-slate-800" 
-          : "bg-gradient-to-br from-slate-50 to-slate-100"
-      }`}>
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-              <p className={`text-lg font-medium ${
-                darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-slate-600
-              }`}>
-                Loading faculty dashboard...
-              </p>
-            </div>
+      <div className={bgShell}>
+        <AmbientBackground />
+        <div className="relative z-10 flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <Loader2 className={`mx-auto h-10 w-10 animate-spin ${lightMode ? "text-indigo-600" : "text-indigo-400"}`} />
+            <p className={`mt-4 text-sm font-semibold ${lightMode ? "text-slate-500" : "text-slate-400"}`}>Loading faculty dashboard...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Error State
   if (error) {
     return (
-      <div className={`min-h-screen transition-colors duration-500 ${
-        darkMode 
-          ? "bg-gradient-to-br from-slate-900 to-slate-800" 
-          : "bg-gradient-to-br from-slate-50 to-slate-100"
-      }`}>
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <h3 className={`text-lg font-semibold mb-2 ${
-                darkMode ? "text-slate-100" : "text-gray-900"
-              }`}>
-                Error Loading Dashboard
-              </h3>
-              <p className={`mb-6 ${
-                darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-slate-600
-              }`}>{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
+      <div className={bgShell}>
+        <AmbientBackground />
+        <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
+          <div className={`${glassCard} p-10 text-center`}>
+            <AlertTriangle className="mx-auto h-10 w-10 text-rose-400" />
+            <h3 className="mt-4 text-lg font-black">Error Loading Dashboard</h3>
+            <p className={`mt-2 text-sm ${lightMode ? "text-slate-500" : "text-slate-400"}`}>{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition hover:opacity-90"
+            >
+              Try Again
+            </button>
           </div>
         </div>
       </div>
@@ -474,865 +527,635 @@ export default function FacultyDashboard() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${
-      darkMode
-        ? "bg-gradient-to-br from-slate-900 to-slate-800" 
-        : "bg-gradient-to-br from-slate-50 to-slate-100"
-    }`}>
-      {/* Notification System */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
-        {notifications.map(notification => (
-          <div
-            key={notification.id}
-            className={`p-4 rounded-lg shadow-lg border-l-4 transform transition-all duration-300 ${
-              notification.type === "success"
-                ? "bg-green-50 border-green-500 text-green-800 dark:bg-green-900/20 dark:text-green-400"
-                : "bg-red-50 border-red-500 text-red-800 dark:bg-red-900/20 dark:text-red-400"
-            }`}
-          >
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                {notification.type === "success" ? (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                )}
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium">{notification.message}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className={bgShell}>
+      <AmbientBackground />
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Professional Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
-          <div>
-            <h1 className={`text-3xl lg:text-4xl font-bold mb-2 ${
-              darkMode ? "text-slate-100" : "text-gray-900"
-            }`}>
-              Faculty Dashboard
-            </h1>
-            <p className={`text-lg font-medium ${
-              darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-gray-700
-            }`}>
-              Welcome back, {user?.name || "Professor"}! Manage your students and attendance.
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setShowAnalytics(!showAnalytics)}
-              className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors font-medium shadow-sm ${
-                showAnalytics 
-                  ? "bg-purple-600 hover:bg-purple-700 text-white" 
-                  : "bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700" // Changed from text-slate-700
+      {/* Notifications */}
+      <div className="fixed top-4 right-4 z-[60] space-y-2">
+        <AnimatePresence>
+          {notifications.map((notification) => (
+            <motion.div
+              key={notification.id}
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 40 }}
+              className={`flex items-center gap-3 rounded-xl border px-4 py-3 shadow-2xl backdrop-blur-xl ${
+                notification.type === "success"
+                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                  : "border-rose-500/20 bg-rose-500/10 text-rose-400"
               }`}
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              {showAnalytics ? "Hide Analytics" : "Show Analytics"}
-            </button>
-            <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
-            <button
-              onClick={handleProfile}
-              className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium shadow-sm"
+              {notification.type === "success" ? <CheckCircle2 className="h-4 w-4 flex-shrink-0" /> : <AlertTriangle className="h-4 w-4 flex-shrink-0" />}
+              <p className="text-sm font-semibold">{notification.message}</p>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <div className="relative z-10 mx-auto grid max-w-[1480px] gap-0 lg:grid-cols-[18rem_1fr]">
+        <FacultySidebar />
+
+        <main className={`min-w-0 px-4 pb-10 sm:px-6 lg:px-8 ${lightMode ? "light-faculty" : ""}`}>
+          {lightMode && (
+            <style>{`
+              .light-faculty [class*="text-white"] { color: #0f172a !important; }
+              .light-faculty [class*="text-slate-100"] { color: #1e293b !important; }
+              .light-faculty [class*="text-slate-200"] { color: #334155 !important; }
+              .light-faculty [class*="text-slate-300"] { color: #475569 !important; }
+              .light-faculty [class*="text-slate-400"] { color: #64748b !important; }
+              .light-faculty [class*="border-white/"] { border-color: #e2e8f0 !important; }
+              .light-faculty [class*="divide-white/"] { border-color: #e2e8f0 !important; }
+              .light-faculty [class*="ring-white/"] { --tw-ring-color: #e2e8f0 !important; }
+              .light-faculty [class*="bg-white/"] { background-color: #ffffff !important; }
+              .light-faculty [class*="shadow-black"] { box-shadow: 0 18px 60px rgba(15,23,42,0.08) !important; }
+              .light-faculty select option { background-color: #ffffff; color: #0f172a; }
+              .light-faculty [class*="bg-slate-900"] { background-color: #ffffff !important; }
+            `}</style>
+          )}
+          {/* Floating top navbar */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className={`sticky top-4 z-20 mt-4 flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 backdrop-blur-xl ${
+              lightMode ? "border-slate-200 bg-white/90 shadow-lg shadow-slate-200/60" : "border-white/10 bg-white/[0.05] shadow-lg shadow-black/30"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => setSidebarOpen(true)} className={`rounded-xl p-2 lg:hidden ${lightMode ? "text-slate-500 hover:bg-slate-100" : "text-slate-400 hover:bg-white/10"}`}>
+                <Menu className="h-5 w-5" />
+              </button>
+              <div>
+                <p className={`text-sm font-black ${lightMode ? "text-slate-900" : "text-white"}`}>Faculty Dashboard</p>
+                <p className={`text-xs font-medium ${lightMode ? "text-slate-400" : "text-slate-500"}`}>Welcome back, {user?.name || "Professor"}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAnalytics(!showAnalytics)}
+                className={`hidden items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition sm:inline-flex ${
+                  showAnalytics
+                    ? "bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-lg"
+                    : lightMode
+                    ? "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                    : "border border-white/10 text-slate-300 hover:bg-white/[0.06]"
+                }`}
+              >
+                <BarChart3 className="h-3.5 w-3.5" />
+                Analytics
+              </button>
+              <button
+                type="button"
+                onClick={() => setLightMode((v) => !v)}
+                className={`rounded-xl p-2.5 transition ${lightMode ? "bg-slate-100 text-amber-500 hover:bg-slate-200" : "bg-white/[0.06] text-indigo-300 hover:bg-white/[0.12]"}`}
+                title={lightMode ? "Switch to dark mode" : "Switch to light mode"}
+              >
+                {lightMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              </button>
+              <button
+                onClick={handleProfile}
+                className={`hidden items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition sm:inline-flex ${lightMode ? "border border-slate-200 text-slate-600 hover:bg-slate-50" : "border border-white/10 text-slate-300 hover:bg-white/[0.06]"}`}
+              >
+                <UserCircle className="h-3.5 w-3.5" />
+                Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-3.5 py-2 text-xs font-bold text-white shadow-lg shadow-rose-900/30 transition hover:bg-rose-500"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Logout
+              </button>
+            </div>
+          </motion.div>
+
+          <div className="mt-6">
+        {/* Stats */}
+        <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: "Total Students", value: stats.totalStudents, icon: Users, tone: "text-sky-300", bg: "bg-sky-500/10 ring-sky-400/20", bar: "bg-sky-400/60" },
+            { label: "Present Today", value: stats.presentToday, icon: CheckCircle2, tone: "text-emerald-300", bg: "bg-emerald-500/10 ring-emerald-400/20", bar: "bg-emerald-400/60" },
+            { label: "Absent Today", value: stats.absentToday, icon: XCircle, tone: "text-rose-300", bg: "bg-rose-500/10 ring-rose-400/20", bar: "bg-rose-400/60" },
+            { label: "Total Records", value: stats.totalAttendance, icon: ClipboardList, tone: "text-violet-300", bg: "bg-violet-500/10 ring-violet-400/20", bar: "bg-violet-400/60" },
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+              className={`${glassCard} p-5`}
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              View Profile
-            </button>
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium shadow-sm"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Logout
-            </button>
-          </div>
-        </div>
-
-        {/* Quick Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-1">Total Students</p>
-                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{stats.totalStudents}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-green-200 dark:border-green-800 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1">Present Today</p>
-                <p className="text-3xl font-bold text-green-900 dark:text-green-100">{stats.presentToday}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-md">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-red-200 dark:border-red-800 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Absent Today</p>
-                <p className="text-3xl font-bold text-red-900 dark:text-red-100">{stats.absentToday}</p>
-              </div>
-              <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shadow-md">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border-2 border-purple-200 dark:border-purple-800 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-purple-700 dark:text-purple-400 mb-1">Total Records</p>
-                <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{stats.totalAttendance}</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-md">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Analytics Section */}
-        {showAnalytics && (
-          <div className="mb-8 space-y-8">
-            {/* Daily Updates Section */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
-              <h3 className={`text-xl font-bold mb-6 ${
-                darkMode ? "text-slate-100" : "text-white"
-              }`}>
-                📅 Daily Attendance Update
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Today's Stats */}
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border-2 border-blue-200 dark:border-blue-800 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-1">Today's Attendance</p>
-                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                        {analyticsData.dailyUpdates.today.percentage}%
-                      </p>
-                      <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                        {analyticsData.dailyUpdates.today.present} present, {analyticsData.dailyUpdates.today.absent} absent
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">{stat.label}</p>
+                  <p className="mt-2 text-2xl font-black text-white">{stat.value}</p>
                 </div>
-
-                {/* Yesterday's Stats */}
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1">Yesterday's Attendance</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        {analyticsData.dailyUpdates.yesterday.percentage}%
-                      </p>
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                        {analyticsData.dailyUpdates.yesterday.present} present, {analyticsData.dailyUpdates.yesterday.absent} absent
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-gray-500 rounded-xl flex items-center justify-center shadow-md">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Present Change */}
-                <div className={`bg-white dark:bg-slate-800 p-6 rounded-xl border-2 shadow-md ${
-                  analyticsData.dailyUpdates.changes.present >= 0 
-                    ? "border-green-200 dark:border-green-800"
-                    : "border-red-200 dark:border-red-800"
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-sm font-semibold mb-1 ${
-                        analyticsData.dailyUpdates.changes.present >= 0 
-                          ? "text-green-700 dark:text-green-400" 
-                          : "text-red-700 dark:text-red-400"
-                      }`}>
-                        Present Change
-                      </p>
-                      <p className={`text-2xl font-bold ${
-                        analyticsData.dailyUpdates.changes.present >= 0 
-                          ? "text-green-900 dark:text-green-100" 
-                          : "text-red-900 dark:text-red-100"
-                      }`}>
-                        {analyticsData.dailyUpdates.changes.present >= 0 ? '+' : ''}{analyticsData.dailyUpdates.changes.present}%
-                      </p>
-                      <p className={`text-xs font-medium ${
-                        analyticsData.dailyUpdates.changes.present >= 0 
-                          ? "text-green-600 dark:text-green-400" 
-                          : "text-red-600 dark:text-red-400"
-                      }`}>
-                        vs yesterday
-                      </p>
-                    </div>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${
-                      analyticsData.dailyUpdates.changes.present >= 0 ? "bg-green-500" : "bg-red-500"
-                    }`}>
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={
-                          analyticsData.dailyUpdates.changes.present >= 0 
-                            ? "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" 
-                            : "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                        } />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Absent Change */}
-                <div className={`bg-white dark:bg-slate-800 p-6 rounded-xl border-2 shadow-md ${
-                  analyticsData.dailyUpdates.changes.absent <= 0 
-                    ? "border-green-200 dark:border-green-800"
-                    : "border-red-200 dark:border-red-800"
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-sm font-semibold mb-1 ${
-                        analyticsData.dailyUpdates.changes.absent <= 0 
-                          ? "text-green-700 dark:text-green-400" 
-                          : "text-red-700 dark:text-red-400"
-                      }`}>
-                        Absent Change
-                      </p>
-                      <p className={`text-2xl font-bold ${
-                        analyticsData.dailyUpdates.changes.absent <= 0 
-                          ? "text-green-900 dark:text-green-100" 
-                          : "text-red-900 dark:text-red-100"
-                      }`}>
-                        {analyticsData.dailyUpdates.changes.absent >= 0 ? '+' : ''}{analyticsData.dailyUpdates.changes.absent}%
-                      </p>
-                      <p className={`text-xs font-medium ${
-                        analyticsData.dailyUpdates.changes.absent <= 0 
-                          ? "text-green-600 dark:text-green-400" 
-                          : "text-red-600 dark:text-red-400"
-                      }`}>
-                        vs yesterday
-                      </p>
-                    </div>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${
-                      analyticsData.dailyUpdates.changes.absent <= 0 ? "bg-green-500" : "bg-red-500"
-                    }`}>
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={
-                          analyticsData.dailyUpdates.changes.absent <= 0 
-                            ? "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" 
-                            : "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                        } />
-                      </svg>
-                    </div>
-                  </div>
+                <div className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${stat.bg}`}>
+                  <stat.icon className={`h-5 w-5 ${stat.tone}`} />
                 </div>
               </div>
-            </div>
-
-            {/* Analytics Charts */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              {/* Attendance Distribution */}
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
-                <h3 className={`text-xl font-bold mb-6 ${
-                  darkMode ? "text-slate-100" : "text-white"
-                }`}>
-                  📊 Overall Attendance Distribution
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={analyticsData.attendanceDistribution}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      dataKey="value"
-                      label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                    >
-                      {analyticsData.attendanceDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value, name) => [`${value} students`, name]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Enhanced Weekly Trend */}
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
-                <h3 className={`text-xl font-bold mb-6 ${
-                  darkMode ? "text-slate-100" : "text-white"
-                }`}>
-                  📈 Weekly Attendance Trend
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={analyticsData.weeklyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value, name) => {
-                        if (name === 'present') {
-                          return [`${value} students`, 'Present'];
-                        } else if (name === 'absent') {
-                          return [`${value} students`, 'Absent'];
-                        } else if (name === 'percentage') {
-                          return [`${value}%`, 'Attendance %'];
-                        }
-                        return [value, name];
-                      }}
-                      labelFormatter={(label) => `Day: ${label}`}
-                    />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="present" 
-                      stroke="#10b981" 
-                      strokeWidth={3}
-                      name="Present"
-                      dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="absent" 
-                      stroke="#ef4444" 
-                      strokeWidth={3}
-                      name="Absent"
-                      dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="percentage" 
-                      stroke="#3b82f6" 
-                      strokeWidth={2}
-                      name="Attendance %"
-                      strokeDasharray="5 5"
-                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-                <div className="mt-4 grid grid-cols-7 gap-2">
-                  {analyticsData.weeklyTrend.map((day, index) => (
-                    <div key={day.day} className="text-center">
-                      <div className={`text-xs font-medium ${
-                        darkMode ? "text-slate-400" : "text-gray-900" // Changed from text-slate-600
-                      }`}>
-                        {day.day}
-                      </div>
-                      <div className={`text-sm font-bold ${
-                        day.percentage >= 80 ? "text-green-600" :
-                        day.percentage >= 60 ? "text-yellow-600" : "text-red-600"
-                      }`}>
-                        {day.percentage}%
-                      </div>
-                      <div className={`text-xs ${
-                        darkMode ? "text-slate-500" : "text-gray-800" // Changed from text-slate-500
-                      }`}>
-                        {day.total} total
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Subject-wise Breakdown */}
-            {analyticsData.subjectBreakdown.length > 0 && (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
-                <h3 className={`text-xl font-bold mb-6 ${
-                  darkMode ? "text-slate-100" : "text-white"
-                }`}>
-                  📚 Subject-wise Attendance
-                </h3>
-                <div className="space-y-4">
-                  {analyticsData.subjectBreakdown.map((subj) => (
-                    <div key={subj.subject}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`text-sm font-semibold ${
-                          darkMode ? "text-slate-200" : "text-white"
-                        }`}>
-                          {subj.subject}
-                        </span>
-                        <span className={`text-sm font-bold ${
-                          subj.percentage >= 80 ? "text-green-600" :
-                          subj.percentage >= 60 ? "text-yellow-600" : "text-red-600"
-                        }`}>
-                          {subj.percentage}% ({subj.present}/{subj.total})
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2.5">
-                        <div
-                          className={`h-2.5 rounded-full ${
-                            subj.percentage >= 80 ? "bg-green-500" :
-                            subj.percentage >= 60 ? "bg-yellow-500" : "bg-red-500"
-                          }`}
-                          style={{ width: `${subj.percentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Student Performance */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
-              <h3 className={`text-xl font-bold mb-6 ${
-                darkMode ? "text-slate-100" : "text-white"
-              }`}>
-                🏆 Student Performance Ranking {selectedSubject !== "all" && `— ${selectedSubject}`}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {analyticsData.studentPerformance.slice(0, 6).map((student, index) => (
-                  <div key={student.name} className="bg-white dark:bg-slate-700 rounded-xl p-4 border-2 border-slate-200 dark:border-slate-600 shadow-md hover:shadow-lg transition-shadow">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`text-sm font-semibold ${
-                        darkMode ? "text-slate-300" : "text-white"
-                      }`}>
-                        #{index + 1}
-                      </span>
-                      <span className={`text-lg font-bold ${
-                        student.attendance >= 80 ? "text-green-600" : 
-                        student.attendance >= 60 ? "text-yellow-600" : "text-red-600"
-                      }`}>
-                        {student.attendance}%
-                      </span>
-                    </div>
-                    <h4 className={`font-semibold mb-1 ${
-                      darkMode ? "text-slate-100" : "text-white"
-                    }`}>
-                      {student.name}
-                    </h4>
-                    <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mb-2">
-                      <div 
-                        className={`h-2 rounded-full ${
-                          student.attendance >= 80 ? "bg-green-500" : 
-                          student.attendance >= 60 ? "bg-yellow-500" : "bg-red-500"
-                        }`}
-                        style={{ width: `${student.attendance}%` }}
-                      ></div>
-                    </div>
-                    <p className={`text-xs font-medium ${
-                      darkMode ? "text-slate-400" : "text-white"
-                    }`}>
-                      {student.present}/{student.total} days
-                    </p>
-                  </div>
+              {/* Mini sparkline from this week's trend */}
+              <div className="mt-4 flex h-6 items-end gap-1">
+                {analyticsData.weeklyTrend.map((day) => (
+                  <motion.div
+                    key={day.day}
+                    initial={{ height: 0 }}
+                    animate={{ height: `${Math.max(day.percentage, 6)}%` }}
+                    transition={{ duration: 0.6, delay: index * 0.05 }}
+                    className={`flex-1 rounded-sm ${stat.bar}`}
+                    title={`${day.day}: ${day.percentage}%`}
+                  />
                 ))}
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          ))}
+        </div>
 
-        {/* Search and Filter Section */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              {/* Search */}
-              <div className="relative flex-1">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+        {/* AI Insights */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className={`${glassCard} mb-8 p-6`}
+        >
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-black uppercase tracking-wide text-slate-300">
+            <Sparkles className="h-4 w-4 text-amber-300" />
+            AI Insights
+          </h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {(() => {
+              const bestDay = [...analyticsData.weeklyTrend].sort((a, b) => b.percentage - a.percentage)[0];
+              const weakestSubject = analyticsData.subjectBreakdown.length > 0 ? [...analyticsData.subjectBreakdown].sort((a, b) => a.percentage - b.percentage)[0] : null;
+              const trend = analyticsData.dailyUpdates.changes.present;
+              return [
+                {
+                  text: bestDay && bestDay.total > 0
+                    ? `Attendance peaks on ${bestDay.day} at ${bestDay.percentage}%.`
+                    : "Not enough data yet to spot a peak day.",
+                },
+                {
+                  text: weakestSubject
+                    ? `${weakestSubject.subject} has the lowest attendance at ${weakestSubject.percentage}% — may need attention.`
+                    : "Add subjects to see subject-wise insights.",
+                },
+                {
+                  text: `Present rate is ${trend >= 0 ? "up" : "down"} ${Math.abs(trend)}% compared to yesterday.`,
+                },
+              ];
+            })().map((insight, i) => (
+              <div key={i} className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                <p className="text-xs leading-5 font-medium text-slate-300">{insight.text}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Analytics */}
+        <AnimatePresence>
+          {showAnalytics && (
+            <motion.div
+              id="analytics"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-8 space-y-6 overflow-hidden"
+            >
+              {/* Daily updates */}
+              <div className={`${glassCard} p-6`}>
+                <h3 className="mb-6 flex items-center gap-2 text-lg font-black">
+                  <Calendar className="h-5 w-5 text-indigo-300" />
+                  Daily Attendance Update
+                </h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-sky-300">Today</p>
+                    <p className="mt-1 text-2xl font-black">{analyticsData.dailyUpdates.today.percentage}%</p>
+                    <p className="mt-1 text-xs font-medium text-slate-400">
+                      {analyticsData.dailyUpdates.today.present} present, {analyticsData.dailyUpdates.today.absent} absent
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Yesterday</p>
+                    <p className="mt-1 text-2xl font-black">{analyticsData.dailyUpdates.yesterday.percentage}%</p>
+                    <p className="mt-1 text-xs font-medium text-slate-400">
+                      {analyticsData.dailyUpdates.yesterday.present} present, {analyticsData.dailyUpdates.yesterday.absent} absent
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+                    <p className={`text-xs font-bold uppercase tracking-wide ${analyticsData.dailyUpdates.changes.present >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+                      Present Change
+                    </p>
+                    <p className="mt-1 flex items-center gap-1.5 text-2xl font-black">
+                      {analyticsData.dailyUpdates.changes.present >= 0 ? <TrendingUp className="h-5 w-5 text-emerald-300" /> : <TrendingDown className="h-5 w-5 text-rose-300" />}
+                      {analyticsData.dailyUpdates.changes.present >= 0 ? "+" : ""}
+                      {analyticsData.dailyUpdates.changes.present}%
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-slate-400">vs yesterday</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+                    <p className={`text-xs font-bold uppercase tracking-wide ${analyticsData.dailyUpdates.changes.absent <= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+                      Absent Change
+                    </p>
+                    <p className="mt-1 flex items-center gap-1.5 text-2xl font-black">
+                      {analyticsData.dailyUpdates.changes.absent <= 0 ? <TrendingDown className="h-5 w-5 text-emerald-300" /> : <TrendingUp className="h-5 w-5 text-rose-300" />}
+                      {analyticsData.dailyUpdates.changes.absent >= 0 ? "+" : ""}
+                      {analyticsData.dailyUpdates.changes.absent}%
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-slate-400">vs yesterday</p>
+                  </div>
                 </div>
+              </div>
+
+              {/* Charts */}
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <div className={`${glassCard} p-6`}>
+                  <h3 className="mb-4 flex items-center gap-2 text-lg font-black">
+                    <BarChart3 className="h-5 w-5 text-violet-300" />
+                    Overall Attendance Distribution
+                  </h3>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie
+                        data={analyticsData.attendanceDistribution}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={95}
+                        dataKey="value"
+                        label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                      >
+                        {analyticsData.attendanceDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff" }}
+                        formatter={(value, name) => [`${value} students`, name]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className={`${glassCard} p-6`}>
+                  <h3 className="mb-4 flex items-center gap-2 text-lg font-black">
+                    <TrendingUp className="h-5 w-5 text-sky-300" />
+                    Weekly Attendance Trend
+                  </h3>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={analyticsData.weeklyTrend}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                      <XAxis dataKey="day" stroke="rgba(255,255,255,0.4)" fontSize={12} />
+                      <YAxis stroke="rgba(255,255,255,0.4)" fontSize={12} />
+                      <Tooltip
+                        contentStyle={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff" }}
+                        formatter={(value, name) => {
+                          if (name === "present") return [`${value} students`, "Present"];
+                          if (name === "absent") return [`${value} students`, "Absent"];
+                          if (name === "percentage") return [`${value}%`, "Attendance %"];
+                          return [value, name];
+                        }}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="present" stroke="#34d399" strokeWidth={3} name="Present" dot={{ fill: "#34d399", strokeWidth: 2, r: 4 }} />
+                      <Line type="monotone" dataKey="absent" stroke="#fb7185" strokeWidth={3} name="Absent" dot={{ fill: "#fb7185", strokeWidth: 2, r: 4 }} />
+                      <Line type="monotone" dataKey="percentage" stroke="#818cf8" strokeWidth={2} strokeDasharray="5 5" name="Attendance %" dot={{ fill: "#818cf8", strokeWidth: 2, r: 3 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Subject breakdown */}
+              {analyticsData.subjectBreakdown.length > 0 && (
+                <div className={`${glassCard} p-6`}>
+                  <h3 className="mb-5 flex items-center gap-2 text-lg font-black">
+                    <BookOpen className="h-5 w-5 text-amber-300" />
+                    Subject-wise Attendance
+                  </h3>
+                  <div className="space-y-4">
+                    {analyticsData.subjectBreakdown.map((subj) => (
+                      <div key={subj.subject}>
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <span className="text-sm font-bold text-slate-200">{subj.subject}</span>
+                          <span className={`text-sm font-black ${subj.percentage >= 80 ? "text-emerald-300" : subj.percentage >= 60 ? "text-amber-300" : "text-rose-300"}`}>
+                            {subj.percentage}% ({subj.present}/{subj.total})
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                          <div
+                            className={`h-full rounded-full ${subj.percentage >= 80 ? "bg-emerald-400" : subj.percentage >= 60 ? "bg-amber-400" : "bg-rose-400"}`}
+                            style={{ width: `${subj.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Student performance */}
+              <div className={`${glassCard} p-6`}>
+                <h3 className="mb-5 flex items-center gap-2 text-lg font-black">
+                  <Trophy className="h-5 w-5 text-amber-300" />
+                  Student Performance Ranking {selectedSubject !== "all" && `— ${selectedSubject}`}
+                </h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {analyticsData.studentPerformance.slice(0, 6).map((student, index) => (
+                    <div key={student.name} className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-400">#{index + 1}</span>
+                        <span className={`text-lg font-black ${student.attendance >= 80 ? "text-emerald-300" : student.attendance >= 60 ? "text-amber-300" : "text-rose-300"}`}>
+                          {student.attendance}%
+                        </span>
+                      </div>
+                      <h4 className="mb-2 truncate font-bold text-white">{student.name}</h4>
+                      <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className={`h-full rounded-full ${student.attendance >= 80 ? "bg-emerald-400" : student.attendance >= 60 ? "bg-amber-400" : "bg-rose-400"}`}
+                          style={{ width: `${student.attendance}%` }}
+                        />
+                      </div>
+                      <p className="text-xs font-medium text-slate-400">{student.present}/{student.total} days</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Search / filters / subject controls */}
+        <div id="subjects" className={`${glassCard} mb-8 p-6`}>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-1 flex-col gap-3 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <input
                   type="text"
                   placeholder="Search students..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                    darkMode 
-                      ? "bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400" 
-                      : "bg-white border-slate-300 text-slate-900 placeholder-gray-700" 
-                  }`}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-11 pr-4 text-sm font-medium text-white placeholder-slate-500 outline-none transition focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-500/20"
                 />
               </div>
 
-              {/* Filter */}
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  darkMode 
-                    ? "bg-slate-700 border-slate-600 text-slate-100" 
-                    : "bg-white border-slate-300 text-slate-900"
-                }`}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm font-semibold text-white outline-none focus:border-indigo-400/60"
               >
-                <option value="all">All Students</option>
-                <option value="present">Present Today</option>
-                <option value="absent">Absent Today</option>
-                <option value="not_marked">Not Marked</option>
+                <option value="all" className="bg-slate-900">All Students</option>
+                <option value="present" className="bg-slate-900">Present Today</option>
+                <option value="absent" className="bg-slate-900">Absent Today</option>
+                <option value="not_marked" className="bg-slate-900">Not Marked</option>
               </select>
 
-              {/* Subject Filter - scopes stats, table and analytics to one subject */}
               <select
                 value={selectedSubject}
                 onChange={(e) => setSelectedSubject(e.target.value)}
-                className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  darkMode 
-                    ? "bg-slate-700 border-slate-600 text-slate-100" 
-                    : "bg-white border-slate-300 text-slate-900"
-                }`}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm font-semibold text-white outline-none focus:border-indigo-400/60"
               >
-                <option value="all">All Subjects</option>
+                <option value="all" className="bg-slate-900">All Subjects</option>
                 {subjects.map((subject) => {
                   const name = subject.name || subject;
                   return (
-                    <option key={name} value={name}>{name}</option>
+                    <option key={name} value={name} className="bg-slate-900">
+                      {name}
+                    </option>
                   );
                 })}
               </select>
             </div>
 
-            {/* Subject Selector - required before marking attendance */}
-            <div className="flex items-center gap-2">
-              <label className={`text-sm font-semibold whitespace-nowrap ${
-                darkMode ? "text-slate-300" : "text-white"
-              }`}>
-                📚 Subject:
-              </label>
+            <div className="flex flex-wrap items-center gap-2.5">
               <select
                 value={markingSubject}
                 onChange={(e) => setMarkingSubject(e.target.value)}
-                className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm ${
-                  darkMode 
-                    ? "bg-slate-700 border-slate-600 text-slate-100" 
-                    : "bg-white border-slate-300 text-slate-900"
-                }`}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm font-semibold text-white outline-none focus:border-indigo-400/60"
               >
-                {subjects.length === 0 && <option value="">No subjects available</option>}
+                {subjects.length === 0 && <option value="" className="bg-slate-900">No subjects available</option>}
                 {subjects.map((subject) => {
                   const name = subject.name || subject;
                   return (
-                    <option key={name} value={name}>{name}</option>
+                    <option key={name} value={name} className="bg-slate-900">
+                      {name}
+                    </option>
                   );
                 })}
               </select>
               <button
                 onClick={() => setShowAddSubject(true)}
-                className="inline-flex items-center px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 px-3.5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:opacity-90"
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+                <Plus className="h-4 w-4" />
                 Add Subject
               </button>
-            </div>
-
-            {/* Add Subject Modal */}
-            {showAddSubject && (
-              <div
-                className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-                onClick={() => setShowAddSubject(false)}
-              >
-                <div
-                  className={`w-full max-w-md rounded-2xl shadow-xl p-6 ${
-                    darkMode ? "bg-slate-800" : "bg-white"
-                  }`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <h3 className={`text-lg font-bold mb-4 ${
-                    darkMode ? "text-slate-100" : "text-gray-900"
-                  }`}>
-                    📚 Add New Subject
-                  </h3>
-
-                  <div className="mb-4">
-                    <label className={`block text-sm font-semibold mb-1 ${
-                      darkMode ? "text-slate-300" : "text-gray-700"
-                    }`}>
-                      Subject Name *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Mathematics"
-                      value={newSubjectName}
-                      onChange={(e) => setNewSubjectName(e.target.value)}
-                      autoFocus
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        darkMode 
-                          ? "bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400" 
-                          : "bg-white border-slate-300 text-slate-900 placeholder-gray-400"
-                      }`}
-                    />
-                  </div>
-
-                  <div className="mb-6">
-                    <label className={`block text-sm font-semibold mb-1 ${
-                      darkMode ? "text-slate-300" : "text-gray-700"
-                    }`}>
-                      Subject Code (optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. MATH101"
-                      value={newSubjectCode}
-                      onChange={(e) => setNewSubjectCode(e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        darkMode 
-                          ? "bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400" 
-                          : "bg-white border-slate-300 text-slate-900 placeholder-gray-400"
-                      }`}
-                    />
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => {
-                        setShowAddSubject(false);
-                        setNewSubjectName("");
-                        setNewSubjectCode("");
-                      }}
-                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors border ${
-                        darkMode
-                          ? "border-slate-600 text-slate-300 hover:bg-slate-700"
-                          : "border-slate-300 text-gray-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={addSubject}
-                      disabled={addingSubject}
-                      className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg font-medium transition-colors"
-                    >
-                      {addingSubject ? "Adding..." : "Add Subject"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Bulk Actions */}
-            <div className="flex gap-2">
               <button
                 onClick={markAllPresent}
-                className="inline-flex items-center px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/15 px-3.5 py-2.5 text-sm font-bold text-emerald-300 ring-1 ring-emerald-400/20 transition hover:bg-emerald-500/25"
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <CheckCircle2 className="h-4 w-4" />
                 Mark All Present
               </button>
               <button
                 onClick={markAllAbsent}
-                className="inline-flex items-center px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-rose-500/15 px-3.5 py-2.5 text-sm font-bold text-rose-300 ring-1 ring-rose-400/20 transition hover:bg-rose-500/25"
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <XCircle className="h-4 w-4" />
                 Mark All Absent
               </button>
             </div>
           </div>
         </div>
 
-        {/* Student Management Section */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h3 className={`text-xl font-bold ${
-              darkMode ? "text-slate-100" : "text-white"
-            }`}>
-              👥 Student Management
+        {/* Add Subject Modal */}
+        <AnimatePresence>
+          {showAddSubject && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+              onClick={() => setShowAddSubject(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className={`w-full max-w-md ${glassCard} p-6`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mb-5 flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-lg font-black">
+                    <BookOpen className="h-5 w-5 text-indigo-300" />
+                    Add New Subject
+                  </h3>
+                  <button onClick={() => setShowAddSubject(false)} className="rounded-lg p-1 text-slate-400 transition hover:bg-white/10 hover:text-white">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-400">Subject Name *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Mathematics"
+                    value={newSubjectName}
+                    onChange={(e) => setNewSubjectName(e.target.value)}
+                    autoFocus
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm font-medium text-white placeholder-slate-500 outline-none focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-400">Subject Code (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. MATH101"
+                    value={newSubjectCode}
+                    onChange={(e) => setNewSubjectCode(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm font-medium text-white placeholder-slate-500 outline-none focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowAddSubject(false);
+                      setNewSubjectName("");
+                      setNewSubjectCode("");
+                    }}
+                    className="flex-1 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-bold text-slate-300 transition hover:bg-white/[0.06]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={addSubject}
+                    disabled={addingSubject}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition hover:opacity-90 disabled:opacity-60"
+                  >
+                    {addingSubject && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {addingSubject ? "Adding..." : "Add Subject"}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Student Management */}
+        <div id="students" className={`${glassCard} mb-8 overflow-hidden`}>
+          <div className="border-b border-white/10 px-6 py-5">
+            <h3 className="flex items-center gap-2 text-lg font-black">
+              <Users className="h-5 w-5 text-sky-300" />
+              Student Management
             </h3>
-            <p className={`text-sm font-medium mt-1 ${
-              darkMode ? "text-slate-400" : "text-white"
-            }`}>
+            <p className="mt-1 text-sm font-medium text-slate-400">
               Mark attendance and manage your students {markingSubject && `for ${markingSubject}`}
             </p>
           </div>
-          
+
           <div className="p-6">
             {students.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                  </svg>
+              <div className="py-16 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5">
+                  <Users className="h-6 w-6 text-slate-500" />
                 </div>
-                <h4 className={`text-lg font-bold mb-2 ${
-                  darkMode ? "text-slate-100" : "text-white"
-                }`}>
-                  No Students Found
-                </h4>
-                <p className={`font-medium ${
-                  darkMode ? "text-slate-400" : "text-white" 
-                }`}>
-                  No students are registered in your class yet.
-                </p>
+                <h4 className="mt-4 text-sm font-black">No Students Found</h4>
+                <p className="mt-1 text-sm font-medium text-slate-400">No students are registered in your class yet.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredStudents.map((student) => (
-                  <div key={student._id} className="bg-white dark:bg-slate-700 rounded-xl p-6 border-2 border-slate-200 dark:border-slate-600 shadow-md hover:shadow-lg transition-shadow">
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {filteredStudents.map((student, index) => (
+                  <motion.div
+                    key={student._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.02 }}
+                    className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 transition hover:bg-white/[0.05]"
+                  >
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-base font-black text-white shadow-lg">
                         {student.name.charAt(0).toUpperCase()}
                       </div>
-                      <div className="ml-4">
-                        <h4 className={`font-bold ${
-                          darkMode ? "text-slate-100" : "text-white"
-                        }`}>
-                          {student.name}
-                        </h4>
-                        <p className={`text-sm font-semibold ${
-                          darkMode ? "text-slate-400" : "text-white" 
-                        }`}>
-                          {student.email}
-                        </p>
+                      <div className="min-w-0">
+                        <h4 className="truncate font-bold text-white">{student.name}</h4>
+                        <p className="truncate text-xs font-medium text-slate-400">{student.email}</p>
                       </div>
                     </div>
-                    
-                    <div className="flex flex-wrap gap-2">
+
+                    <div className="flex gap-2">
                       <button
                         onClick={() => mark(student._id, "present")}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md"
+                        className="flex-1 rounded-lg bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-300 ring-1 ring-emerald-400/20 transition hover:bg-emerald-500/25"
                       >
-                        ✓ Present
+                        Present
                       </button>
                       <button
                         onClick={() => mark(student._id, "absent")}
-                        className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md"
+                        className="flex-1 rounded-lg bg-rose-500/15 px-3 py-2 text-xs font-bold text-rose-300 ring-1 ring-rose-400/20 transition hover:bg-rose-500/25"
                       >
-                        ✗ Absent
+                        Absent
                       </button>
                     </div>
-                    
+
                     <button
                       onClick={() => deleteStudent(student._id)}
-                      className="w-full mt-3 bg-slate-500 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md"
+                      className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-slate-400 transition hover:bg-white/[0.06] hover:text-rose-300"
                     >
-                      🗑️ Delete Student
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete Student
                     </button>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* Recent Attendance Records */}
+        {/* Recent Attendance */}
         {subjectFilteredAttendance.length > 0 && (
-          <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-              <h3 className={`text-xl font-bold ${
-                darkMode ? "text-slate-100" : "text-white"
-              }`}>
-                📋 Recent Attendance Records
+          <div id="attendance-records" className={`${glassCard} overflow-hidden`}>
+            <div className="border-b border-white/10 px-6 py-5">
+              <h3 className="flex items-center gap-2 text-lg font-black">
+                <ClipboardList className="h-5 w-5 text-violet-300" />
+                Recent Attendance Records
               </h3>
-              <p className={`text-sm font-medium mt-1 ${
-                darkMode ? "text-slate-400" : "text-white"
-              }`}>
-                Latest attendance entries
-              </p>
+              <p className="mt-1 text-sm font-medium text-slate-400">Latest attendance entries</p>
             </div>
-            
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-700">
+                <thead className="bg-white/[0.02]">
                   <tr>
-                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-white"
-                    }`}>
-                      Date
-                    </th>
-                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-white"
-                    }`}>
-                      Student
-                    </th>
-                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-white"
-                    }`}>
-                      Subject
-                    </th>
-                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-white"
-                    }`}>
-                      Status
-                    </th>
-                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                      darkMode ? "text-slate-300" : "text-white"
-                    }`}>
-                      Marked By
-                    </th>
+                    {["Date", "Student", "Subject", "Status", "Marked By"].map((h) => (
+                      <th key={h} className="px-6 py-3.5 text-left text-xs font-black uppercase tracking-wider text-slate-400">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                <tbody className="divide-y divide-white/5">
                   {subjectFilteredAttendance.slice(0, 10).map((record) => (
-                    <tr key={record._id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${
-                        darkMode ? "text-slate-100" : "text-white"
-                      }`}>
-                        {new Date(record.date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                    <tr key={record._id} className="transition hover:bg-white/[0.03]">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-white">
+                        {new Date(record.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
-                        darkMode ? "text-slate-400" : "text-white"
-                      }`}>
-                        {record.student?.name || "N/A"}
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
-                        darkMode ? "text-slate-400" : "text-white"
-                      }`}>
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-400">{record.student?.name || "N/A"}</td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span className="inline-flex items-center rounded-full bg-indigo-500/15 px-2.5 py-1 text-xs font-bold text-indigo-300 ring-1 ring-indigo-400/20">
                           {record.subject || "General"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                          record.status === "present" 
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" 
-                            : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
-                        }`}>
-                          <div className={`w-2 h-2 rounded-full mr-2 ${
-                            record.status === "present" ? "bg-green-500" : "bg-red-500"
-                          }`}></div>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+                            record.status === "present" ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"
+                          }`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${record.status === "present" ? "bg-emerald-400" : "bg-rose-400"}`} />
                           {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
                         </span>
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
-                        darkMode ? "text-slate-400" : "text-white"
-                      }`}>
-                        {record.markedBy?.name || "N/A"}
-                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-400">{record.markedBy?.name || "N/A"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1340,6 +1163,9 @@ export default function FacultyDashboard() {
             </div>
           </div>
         )}
+
+          </div>
+        </main>
       </div>
     </div>
   );
