@@ -12,6 +12,7 @@ const app = express();
 
 // ✅ Allowed Origins (Frontend + Localhost)
 const allowedOrigins = [
+  "https://smart-attendance-five.vercel.app/",
   "https://smart-attendance-git-main-sahaj2803s-projects.vercel.app", // Vercel
   "http://localhost:3000", // Local React Dev
   "http://localhost:3001"  // If needed for admin panel testing
